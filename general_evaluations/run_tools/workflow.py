@@ -10,7 +10,7 @@ parser.add_argument('--generators', type=str, help="Comma separated generators")
 parser.add_argument('--cores', type=int, help="Number of cores to use")
 args = parser.parse_args()
 
-this_directory = os.getcwd()
+this_directory = os.path.dirname(os.path.realpath(__file__))
 
 generators = str(args.generators).split(',')
 commands = ['pwd']

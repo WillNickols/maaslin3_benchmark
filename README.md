@@ -30,3 +30,23 @@ One script that produces a `results/` folder of everything.
 - Effect sizes
 
 ## Maaslin 3 new inference evaluations
+
+
+
+Running:
+```
+python assembly_workflow.py \
+  --parameters general_evaluations/evaluate_general.txt
+  -o /n/hutlab12_nobackup/users/wnickols/maaslin3/maaslin3_benchmark \
+  --grid-scratch /n/holyscratch01/huttenhower_lab/wnickols/maaslin3_benchmark/ \
+  --grid-partition 'shared' --grid-jobs 96 --cores 8 --time 180 --mem 2000 \
+  --local-jobs 12
+```
+
+
+
+
+
+
+
+

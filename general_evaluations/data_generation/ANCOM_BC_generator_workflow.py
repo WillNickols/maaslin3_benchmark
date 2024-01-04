@@ -10,7 +10,7 @@ parser.add_argument('--working-directory', type=str, help="Working directory")
 parser.add_argument('--cores', type=int, help="Number of cores to use")
 args = parser.parse_args()
 
-this_directory = os.getcwd()
+this_directory = os.path.dirname(os.path.realpath(__file__))
 
 #import parameters from
 with open(str(args.parameters), 'r') as file:
