@@ -30,5 +30,3 @@ One script that produces a `results/` folder of everything.
 - Effect sizes
 
 ## Maaslin 3 new inference evaluations
-
-### 
