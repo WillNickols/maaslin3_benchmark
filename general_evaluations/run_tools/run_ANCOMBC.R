@@ -154,12 +154,6 @@ if (!outputs_already_exist){
     }
     
     sink('/dev/null')
-    assays = S4Vectors::SimpleList(counts = as.matrix(abundance))
-    smd = S4Vectors::DataFrame(metadata)
-    both_tse <- TreeSummarizedExperiment(
-      assays = assays,
-      colData = smd)
-    
     if ('ID' %in% colnames(metadata)) {
       if (length(unique(metadata$ID)) == length(metadata$ID)) { # No random effect
         fix_formula <- paste0(colnames(metadata)[colnames(metadata) != "ID"], collapse = " + ")
@@ -173,8 +167,27 @@ if (!outputs_already_exist){
       random_formula <- NULL
     }
     
-    ancombc_out <- ancombc2(both_tse, fix_formula = fix_formula,
-                            rand_formula = random_formula, p_adj_method = "BH", alpha = 0.1)
+    ancombc_out <- tryCatch({
+      assays = S4Vectors::SimpleList(counts = as.matrix(abundance))
+      smd = S4Vectors::DataFrame(metadata)
+      both_tse <- TreeSummarizedExperiment(
+        assays = assays,
+        colData = smd)
+      ancombc_out <- ancombc2(both_tse, fix_formula = fix_formula,
+                              rand_formula = random_formula, p_adj_method = "BH", alpha = 0.1)
+    }, error = function(err) {
+      features_to_drop <- unlist(strsplit(gsub("\nPlease remove.*", "", gsub(".*taxa\\:\n", "", err)), ", "))
+      abundance <- abundance[!(rownames(abundance) %in% features_to_drop),]
+      assays = S4Vectors::SimpleList(counts = as.matrix(abundance))
+      smd = S4Vectors::DataFrame(metadata)
+      both_tse <- TreeSummarizedExperiment(
+        assays = assays,
+        colData = smd)
+      ancombc_out <- ancombc2(both_tse, fix_formula = fix_formula,
+                              rand_formula = random_formula, p_adj_method = "BH", alpha = 0.1)
+      return(ancombc_out)
+    })
+    
     
     glm.test <- ancombc_out$res
     glm.test <- glm.test[,grepl("^taxon|^lfc_|^p_", colnames(glm.test))]
