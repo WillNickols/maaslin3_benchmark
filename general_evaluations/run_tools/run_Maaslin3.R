@@ -76,11 +76,6 @@ nCores<- opt$options$nCores # Default parameter
 workingDirectory <- opt$options$workingDirectory # Default parameter
 generator <- opt$options$generator
 
-Maaslin3_path <- paste0(gsub("/[^/]*$", "", workingDirectory), "/Maaslin3/R/")
-for (R_file in dir(Maaslin3_path, pattern = "*.R$")) {
-  source(file.path(Maaslin3_path, R_file))
-}
-
 if (RandomEffect==TRUE){
   inputSubString<-'RandomEffect'
 } else {
@@ -122,12 +117,18 @@ this_output_folder <- file.path(outputDirectory, outputString)
 outputs_already_exist <- TRUE
 if (!dir.exists(this_output_folder)) {
   outputs_already_exist <- FALSE
+  dir.create(this_output_folder, recursive = T, showWarnings = F)
 } else {
   for (i in 1:length(nIterations)) {
     if (!file.exists(paste0(this_output_folder, "/associations_", i, ".tsv"))) {
       outputs_already_exist <- FALSE
     }
   }
+}
+
+Maaslin3_path <- paste0(gsub("/[^/]*$", "", gsub("/$", "", workingDirectory)), "/Maaslin3/R/")
+for (R_file in dir(Maaslin3_path, pattern = "*.R$")) {
+  source(file.path(Maaslin3_path, R_file))
 }
 
 # Run the Model Only if the Output Does Not Exist
@@ -208,3 +209,4 @@ if (!outputs_already_exist){
   # Stop the Cluster 
   stopCluster(cl)
 }
+

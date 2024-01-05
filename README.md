@@ -31,12 +31,29 @@ One script that produces a `results/` folder of everything.
 
 ## Maaslin 3 new inference evaluations
 
+## Running the workflows
+
+Installation: Conda environment, Maaslin3 packages, other R packages, Bioconductor
+install.packages(c('dplyr', 'pbapply', 'lmerTest', 'parallel', 'lme4', 'plyr', 'optparse', 'logging', 'data.table', 'ggplot2', 'grid', 'pheatmap'))
+install.packages(c("pkgmaker", "stringi", "doParallel", "SimSeq", "tidyr")) # Come back to install devtools if necessary
+install.packages("BiocManager")
+BiocManager::install(c("phyloseq", "microbiome", "SparseDOSSA2", "ALDEx2", "ANCOMBC", "TreeSummarizedExperiment", "Maaslin2"))
 
 
 Running:
 ```
-python assembly_workflow.py \
-  --parameters general_evaluations/evaluate_general.txt
+python3 general_evaluations/data_generation/ANCOM_BC_generator_workflow.py --parameters general_evaluations/data_generation/ANCOM_BC_generator_tmp.txt --working-directory /Users/williamnickols/Documents/GitHub/maaslin3_benchmark --cores 4
+
+python3 general_evaluations/data_generation/SD2_workflow.py --parameters general_evaluations/data_generation/SD2_tmp.txt --working-directory /Users/williamnickols/Documents/GitHub/maaslin3_benchmark --cores 4
+
+python3 general_evaluations/data_generation/SimSeq_workflow.py --parameters general_evaluations/data_generation/SimSeq_tmp.txt --working-directory /Users/williamnickols/Documents/GitHub/maaslin3_benchmark --cores 4
+
+python3 general_evaluations/run_tools/workflow.py --generators ANCOM_BC_generator,SD2,SimSeq --working-directory /Users/williamnickols/Documents/GitHub/maaslin3_benchmark --cores 4 --tmp
+```
+
+```
+python general_evaluations/evaluate_general.py \
+  --parameters general_evaluations/evaluate_general.txt \
   -o /n/hutlab12_nobackup/users/wnickols/maaslin3/maaslin3_benchmark \
   --grid-scratch /n/holyscratch01/huttenhower_lab/wnickols/maaslin3_benchmark/ \
   --grid-partition 'shared' --grid-jobs 96 --cores 8 --time 180 --mem 2000 \

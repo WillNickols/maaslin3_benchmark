@@ -48,7 +48,6 @@ metadataType <- opt$options$metadataType # High-level parameter
 nSubjects <- opt$options$nSubjects # Low-level parameter
 nMicrobes <- opt$options$nMicrobes # Low-level parameter
 spikeMicrobes <- opt$options$spikeMicrobes # Low-level parameter
-nMetadata<- opt$options$nMetadata # Low-level parameter
 effectSize<- opt$options$effectSize # Low-level parameter
 effectPos<- opt$options$effectPos # Low-level parameter
 readDepth<- opt$options$readDepth # Default parameter
@@ -62,13 +61,14 @@ pkgmaker::source_files(paste(workingDirectory, '/library/ANCOM_BC_generator_help
 
 inputSubString<-'noRandomEffect'
 nPerSubject <- 1
+nMetadata<- 1
 
 options("scipen"=10)
 inputString<-paste(inputSubString, metadataType, nSubjects, nPerSubject, nMicrobes, spikeMicrobes, nMetadata, effectSize, effectPos, readDepth, sep='_')
 options("scipen"=5)
 
 # Create Input Directory
-inputDirectory <- file.path(workingDirectory, 'Input', 'general_evaluations', 'ANCOM_BC')
+inputDirectory <- file.path(workingDirectory, 'Input', 'general_evaluations', 'ANCOM_BC_generator')
 this_params_folder <- file.path(inputDirectory, inputString)
 
 outputs_already_exist <- TRUE

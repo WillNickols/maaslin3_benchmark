@@ -8,6 +8,7 @@ parser = argparse.ArgumentParser(description="")
 parser.add_argument('--parameters', type=str, help="Specify the parameters")
 parser.add_argument('--working-directory', type=str, help="Working directory")
 parser.add_argument('--cores', type=int, help="Number of cores to use")
+parser.add_argument('--tmp', help="Whether to use reduced parameters", action="store_true")
 args = parser.parse_args()
 
 this_directory = os.path.dirname(os.path.realpath(__file__))
@@ -57,6 +58,8 @@ for param in param_list_final:
     ' --spikeMicrobes ' + param['spikeMicrobes'] + \
     ' --nCores 1' + \
     ' --workingDirectory ' + working_directory
+    if args.tmp:
+        new_command = new_command + ' --nIterations 5'
     commands.append(new_command)
 
 max_concurrent_processes = int(args.cores)
@@ -71,7 +74,7 @@ def run_command(command):
     except Exception as e:
         return (command, str(e), '', 1)
 
-print("Running " + str(len(commands)) + " variations")
+print("Running " + str(len(commands) - 1) + " variations")
 
 with concurrent.futures.ThreadPoolExecutor(max_concurrent_processes) as executor:
     results = list(executor.map(run_command, commands))

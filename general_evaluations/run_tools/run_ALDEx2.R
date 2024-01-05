@@ -117,6 +117,7 @@ this_output_folder <- file.path(outputDirectory, outputString)
 outputs_already_exist <- TRUE
 if (!dir.exists(this_output_folder)) {
   outputs_already_exist <- FALSE
+  dir.create(this_output_folder, recursive = T, showWarnings = F)
 } else {
   for (i in 1:length(nIterations)) {
     if (!file.exists(paste0(this_output_folder, "/associations_", i, ".tsv"))) {

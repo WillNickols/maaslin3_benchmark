@@ -1,0 +1,9 @@
+metadataType: pois_gam soil
+nMicrobes: 1000
+nSubjects: 50
+spikeMicrobes: 0.1
+effectSize: 5
+effectPos: 0.5
+nMetadata: 1
+nPerSubject: 1
+readDepth: 50000

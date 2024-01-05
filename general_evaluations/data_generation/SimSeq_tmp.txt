@@ -1,0 +1,9 @@
+metadataType: ArcticTransects cdi_schubert
+nMicrobes: 90
+nSubjects: 50
+spikeMicrobes: 0.1
+effectSize: 1
+effectPos: 1
+nMetadata: 1
+nPerSubject: 1
+readDepth: 50000

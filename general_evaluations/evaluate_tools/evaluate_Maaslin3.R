@@ -116,24 +116,18 @@ reps<-1:nIterations
 
 # Create Output Directory
 outputDirectory <- file.path(workingDirectory, 'Output', 'general_evaluations', generator)
-outputString <- paste(inputString, "Maaslin3itaug", sep="_")
+outputString <- paste(inputString, "Maaslin3", sep="_")
 this_output_folder <- file.path(outputDirectory, outputString)
 
 outputs_already_exist <- TRUE
 if (!dir.exists(this_output_folder)) {
   outputs_already_exist <- FALSE
-  dir.create(this_output_folder, recursive = T, showWarnings = F)
 } else {
   for (i in 1:length(nIterations)) {
     if (!file.exists(paste0(this_output_folder, "/associations_", i, ".tsv"))) {
       outputs_already_exist <- FALSE
     }
   }
-}
-
-Maaslin3_path <- paste0(gsub("/[^/]*$", "", gsub("/$", "", workingDirectory)), "/Maaslin3/R/")
-for (R_file in dir(Maaslin3_path, pattern = "*.R$")) {
-  source(file.path(Maaslin3_path, R_file))
 }
 
 # Run the Model Only if the Output Does Not Exist
@@ -169,13 +163,13 @@ if (!outputs_already_exist){
       param_list <- list(input_data = abundance, input_metadata = metadata, min_abundance = 0, min_prevalence = 0.0, output = tmp_fit_out, 
                                     min_variance = 0, normalization = 'TSS', transform = 'LOG', analysis_method = 'LM', 
                                     fixed_effects = colnames(metadata)[colnames(metadata) != "ID"], save_scatter = FALSE, 
-                                    save_models = F, plot_heatmap = F, plot_scatter = F, max_significance = 0.1, augment = TRUE, iterative_mode = TRUE)
+                                    save_models = F, plot_heatmap = F, plot_scatter = F, max_significance = 0.1)
     } else{
       param_list <- list(input_data = abundance, input_metadata = metadata, min_abundance = 0, min_prevalence = 0.0, output = tmp_fit_out, 
                                     min_variance = 0, normalization = 'TSS', transform = 'log', analysis_method = 'LM', 
                                     random_effects = "ID", fixed_effects = colnames(metadata)[colnames(metadata) != "ID"], 
                                     save_scatter = FALSE, save_models = F, plot_heatmap = F, plot_scatter = F,
-                                    max_significance = 0.1, augment = TRUE, iterative_mode = TRUE)
+                                    max_significance = 0.1)
     }
     fit_out <- Maaslin3(param_list)
     sink()

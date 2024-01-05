@@ -8,16 +8,22 @@ parser = argparse.ArgumentParser(description="")
 parser.add_argument('--working-directory', type=str, help="Working directory")
 parser.add_argument('--generators', type=str, help="Comma separated generators")
 parser.add_argument('--cores', type=int, help="Number of cores to use")
+parser.add_argument('--tmp', help="Whether to use reduced parameters", action="store_true")
 args = parser.parse_args()
 
-this_directory = os.path.dirname(os.path.realpath(__file__))
+this_directory = os.path.dirname(os.path.realpath(__file__)).rstrip('/') + '/'
 
 generators = str(args.generators).split(',')
 commands = ['pwd']
+working_directory = args.working_directory.rstrip('/') + '/'
 
 for generator in generators:
-    with open(str(this_directory + generator + '.txt'), 'r') as file:
-        lines = file.readlines()
+    if args.tmp:
+        with open(str(working_directory + 'general_evaluations/data_generation/' + generator + '_tmp.txt'), 'r') as file:
+            lines = file.readlines()
+    else:
+        with open(str(this_directory + 'general_evaluations/data_generation/' + generator + '.txt'), 'r') as file:
+            lines = file.readlines()
 
     param_dict = {}
     for line in lines:
@@ -30,7 +36,6 @@ for generator in generators:
             raise ValueError("Wrong input format")
 
     metadata_types = param_dict.pop('metadataType', None)
-    working_directory = args.working_directory
 
     param_list_generation = [dict([(key, value[0]) for key, value in param_dict.items()]) for _ in range(len([item for sublist in param_dict.values() for item in sublist]))]
     counter = 0
@@ -51,7 +56,10 @@ for generator in generators:
 
     param_list_final = set([frozenset(param_single_final.items()) for param_single_final in param_list_final])
 
-    tools = [file for file in os.listdir() if file.startswith('run_')]
+    if args.tmp:
+        tools = [file for file in os.listdir(this_directory) if file.startswith('run_') and 'it_aug' not in file]
+    else:
+        tools = [file for file in os.listdir(this_directory) if file.startswith('run_')]
 
     for param in param_list_final:
         for tool in tools:
@@ -74,11 +82,14 @@ for generator in generators:
             ' --nCores 1' + \
             ' --workingDirectory ' + working_directory + \
             ' --generator ' + generator
+            if args.tmp:
+                new_command = new_command + ' --nIterations 5'
             commands.append(new_command)
 
 max_concurrent_processes = int(args.cores)
 
 def run_command(command):
+    print(command)
     try:
         process = subprocess.Popen(command, shell=True, universal_newlines=True)
         stdout, stderr = process.communicate()
@@ -87,7 +98,7 @@ def run_command(command):
     except Exception as e:
         return (command, str(e), '', 1)
 
-print("Running " + str(len(commands)) + " variations")
+print("Running " + str(len(commands) - 1) + " variations")
 
 with concurrent.futures.ThreadPoolExecutor(max_concurrent_processes) as executor:
     results = list(executor.map(run_command, commands))

@@ -6,6 +6,7 @@ workflow.add_argument("cores", desc="The number of CPU cores allocated to the jo
 workflow.add_argument("mem", desc="The memory in megabytes allocated to run the command", type=int, default=10000)
 workflow.add_argument("time", desc="The time in minutes allocated to run the command", type=int, default=120)
 workflow.add_argument('parameters', type=str, desc="Specify the parameters")
+workflow.add_argument('tmp', type=bool, help="Whether to use reduced parameters", action="store_true")
 args = workflow.parse_args()
 this_directory = os.path.dirname(os.path.realpath(__file__))
 
@@ -52,10 +53,16 @@ def compute_outputs(generator, step):
         return output + 'Output/general_evaluations/' + generator + '/done'
 
 for generator in param_dict['generators']:
-    generate_command = '''{a} && {b}'''.format(
-        a = 'python3 general_evaluations/data_generation/' + generator + '_workflow.py --parameters general_evaluations/data_generation/' + generator + '.txt --working-directory ' + output + ' --cores ' + str(cores),
-        b = 'touch [targets[0]]'
-        )
+    if args.tmp:
+        generate_command = '''{a} && {b}'''.format(
+            a = 'python3 general_evaluations/data_generation/' + generator + '_workflow.py --parameters general_evaluations/data_generation/' + generator + '_tmp.txt --working-directory ' + output + ' --cores ' + str(cores) + ' --tmp',
+            b = 'touch [targets[0]]'
+            )
+    else:
+        generate_command = '''{a} && {b}'''.format(
+            a = 'python3 general_evaluations/data_generation/' + generator + '_workflow.py --parameters general_evaluations/data_generation/' + generator + '.txt --working-directory ' + output + ' --cores ' + str(cores),
+            b = 'touch [targets[0]]'
+            )
     
     workflow.add_task_gridable(actions=generate_command,
         targets=compute_outputs(generator, 'generate'),
@@ -65,10 +72,16 @@ for generator in param_dict['generators']:
         partition=partition
         )
 
-run_tools_command = '''{a} && {b}'''.format(
-    a = 'python3 general_evaluations/run_tools/workflow.py --generators ' + ','.join(param_dict['generators']) + ' --working-directory ' + output + ' --cores ' + str(cores),
-    b = 'touch [targets[0]]'
-    )
+if args.tmp:
+    run_tools_command = '''{a} && {b}'''.format(
+        a = 'python3 general_evaluations/run_tools/workflow.py --tmp --generators ' + ','.join(param_dict['generators']) + ' --working-directory ' + output + ' --cores ' + str(cores),
+        b = 'touch [targets[0]]'
+        )
+else:
+    run_tools_command = '''{a} && {b}'''.format(
+        a = 'python3 general_evaluations/run_tools/workflow.py --generators ' + ','.join(param_dict['generators']) + ' --working-directory ' + output + ' --cores ' + str(cores),
+        b = 'touch [targets[0]]'
+        )
 
 workflow.add_task_gridable(actions=run_tools_command,
     depends=compute_outputs(generator, 'generate'),
