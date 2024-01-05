@@ -141,7 +141,7 @@ def compute_running_outputs(generator, tool, param):
     else:
         inputSubString = 'noRandomEffect'
 
-    new_depends_folder = output + 'Input/general_evaluations/' + generator + '/' + '_'.join([inputSubString, 
+    new_depends_folder = output + 'Output/general_evaluations/' + generator + '/' + '_'.join([inputSubString, 
     param['metadataType'], param['nSubjects'], param['nPerSubject'], param['nMicrobes'], 
     param['spikeMicrobes'], param['nMetadata'], param['effectSize'], param['effectPos'], param['readDepth'], tool]) + '/'
 
@@ -211,7 +211,7 @@ for generator in param_dict['generators']:
             ' --effectSize ' + param['effectSize'] + \
             ' --effectPos ' + param['effectPos'] + \
             ' --readDepth ' + param['readDepth'] + \
-            ' --nCores 1' + \
+            ' --nCores ' + str(cores) + \
             ' --workingDirectory ' + working_directory + \
             ' --generator ' + generator
             if args.tmp:

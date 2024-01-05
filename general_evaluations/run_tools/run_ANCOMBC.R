@@ -137,6 +137,8 @@ if (!outputs_already_exist){
     abundance <- read.csv(paste0(this_params_folder, "/abundance_", i, ".tsv"), sep = "\t")
     truth <- read.csv(paste0(this_params_folder, "/truth_", i, ".tsv"), sep = "\t")
     
+    abundance <- abundance[apply(abundance, 1, var) != 0,]
+    
     for (col in names(metadata)[names(metadata) != "ID"]) {
       if (all(metadata[[col]] %in% c(0, 1))) {
         metadata[[col]] <- as.character(metadata[[col]])
