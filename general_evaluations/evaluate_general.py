@@ -188,10 +188,7 @@ for generator in param_dict['generators']:
 
     param_list_final = set([frozenset(param_single_final.items()) for param_single_final in param_list_final])
 
-    if args.tmp:
-        tools = [file for file in os.listdir(run_tools_directory) if file.startswith('run_') and 'itaug' not in file]
-    else:
-        tools = [file for file in os.listdir(run_tools_directory) if file.startswith('run_')]
+    tools = [file for file in os.listdir(run_tools_directory) if file.startswith('run_')]
 
     for param in param_list_final:
         for tool in tools:
