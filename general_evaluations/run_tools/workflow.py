@@ -22,7 +22,7 @@ for generator in generators:
         with open(str(working_directory + 'general_evaluations/data_generation/' + generator + '_tmp.txt'), 'r') as file:
             lines = file.readlines()
     else:
-        with open(str(this_directory + 'general_evaluations/data_generation/' + generator + '.txt'), 'r') as file:
+        with open(str(working_directory + 'general_evaluations/data_generation/' + generator + '.txt'), 'r') as file:
             lines = file.readlines()
 
     param_dict = {}
