@@ -76,7 +76,7 @@ nCores<- opt$options$nCores # Default parameter
 workingDirectory <- opt$options$workingDirectory # Default parameter
 generator <- opt$options$generator
 
-Maaslin3_path <- paste0(gsub("/[^/]*$", "", workingDirectory), "/Maaslin3/R/")
+Maaslin3_path <- paste0(gsub("/[^/]*$", "", gsub("/$", "", workingDirectory)), "/Maaslin3/R/")
 for (R_file in dir(Maaslin3_path, pattern = "*.R$")) {
   source(file.path(Maaslin3_path, R_file))
 }
@@ -129,11 +129,6 @@ if (!dir.exists(this_output_folder)) {
       outputs_already_exist <- FALSE
     }
   }
-}
-
-Maaslin3_path <- paste0(gsub("/[^/]*$", "", gsub("/$", "", workingDirectory)), "/Maaslin3/R/")
-for (R_file in dir(Maaslin3_path, pattern = "*.R$")) {
-  source(file.path(Maaslin3_path, R_file))
 }
 
 # Run the Model Only if the Output Does Not Exist
