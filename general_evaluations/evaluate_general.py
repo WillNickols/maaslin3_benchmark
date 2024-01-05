@@ -1,6 +1,7 @@
 from anadama2 import Workflow
 import os
 import itertools
+import copy
 
 workflow = Workflow(version="0.1", description="MPA 4 workflow")
 workflow.add_argument("cores", desc="The number of CPU cores allocated to the job", type=int, default=4)
@@ -100,22 +101,16 @@ def compute_generation_outputs(generator):
         param['metadataType'], param['nSubjects'], param['nPerSubject'], param['nMicrobes'], 
         param['spikeMicrobes'], param['nMetadata'], param['effectSize'], param['effectPos'], param['readDepth']]) + '/'
 
-        generation_outputs.extend([new_depends_folder + file + '_' + file_number + '.tsv' for file_type, file_number in list(itertools.product(['metadata', 'abundance', 'truth'], [i for i in range(1, nIterations + 1)]))])
+        generation_outputs.extend([new_depends_folder + file_type + '_' + str(file_number) + '.tsv' for file_type, file_number in list(itertools.product(['metadata', 'abundance', 'truth'], [i for i in range(1, nIterations + 1)]))])
 
     return generation_outputs
 
 for generator in param_dict['generators']:
     if args.tmp:
-        generate_command = '''{a} && {b}'''.format(
-            a = 'python3 general_evaluations/data_generation/' + generator + '_workflow.py --parameters general_evaluations/data_generation/' + generator + '_tmp.txt --working-directory ' + output + ' --cores ' + str(cores) + ' --tmp',
-            b = 'touch [targets[0]]'
-            )
+        generate_command = 'python3 general_evaluations/data_generation/' + generator + '_workflow.py --parameters general_evaluations/data_generation/' + generator + '_tmp.txt --working-directory ' + output + ' --cores ' + str(cores) + ' --tmp'
     else:
-        generate_command = '''{a} && {b}'''.format(
-            a = 'python3 general_evaluations/data_generation/' + generator + '_workflow.py --parameters general_evaluations/data_generation/' + generator + '.txt --working-directory ' + output + ' --cores ' + str(cores),
-            b = 'touch [targets[0]]'
-            )
-    
+        generate_command = 'python3 general_evaluations/data_generation/' + generator + '_workflow.py --parameters general_evaluations/data_generation/' + generator + '.txt --working-directory ' + output + ' --cores ' + str(cores)
+
     workflow.add_task_gridable(actions=generate_command,
         targets=compute_generation_outputs(generator),
         time=time,
@@ -147,7 +142,7 @@ def compute_running_outputs(generator, tool, param):
     param['metadataType'], param['nSubjects'], param['nPerSubject'], param['nMicrobes'], 
     param['spikeMicrobes'], param['nMetadata'], param['effectSize'], param['effectPos'], param['readDepth'], tool]) + '/'
 
-    generation_outputs.extend([new_depends_folder + 'associations_' + file_number + '.tsv' for file_number in [i for i in range(1, nIterations + 1)]])
+    generation_outputs = [new_depends_folder + 'associations_' + str(file_number) + '.tsv' for file_number in [i for i in range(1, nIterations + 1)]]
 
     return generation_outputs
 
