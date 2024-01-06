@@ -42,13 +42,13 @@ BiocManager::install(c("phyloseq", "microbiome", "SparseDOSSA2", "ALDEx2", "ANCO
 
 Running:
 ```
-python3 general_evaluations/data_generation/ANCOM_BC_generator_workflow.py --parameters general_evaluations/data_generation/ANCOM_BC_generator_tmp.txt --working-directory /Users/williamnickols/Documents/GitHub/maaslin3_benchmark --cores 4
+python3 general_evaluations/data_generation/ANCOM_BC_generator_workflow.py --parameters general_evaluations/data_generation/ANCOM_BC_generator_tmp.txt --working-directory /Users/williamnickols/Documents/GitHub/maaslin3_benchmark --cores 4 --tmp
 
-python3 general_evaluations/data_generation/SD2_workflow.py --parameters general_evaluations/data_generation/SD2_tmp.txt --working-directory /Users/williamnickols/Documents/GitHub/maaslin3_benchmark --cores 4
+python3 general_evaluations/data_generation/SD2_workflow.py --parameters general_evaluations/data_generation/SD2_tmp.txt --working-directory /Users/williamnickols/Documents/GitHub/maaslin3_benchmark --cores 4 --tmp
 
-python3 general_evaluations/data_generation/SimSeq_workflow.py --parameters general_evaluations/data_generation/SimSeq_tmp.txt --working-directory /Users/williamnickols/Documents/GitHub/maaslin3_benchmark --cores 4
+python3 general_evaluations/data_generation/SimSeq_workflow.py --parameters general_evaluations/data_generation/SimSeq_tmp.txt --working-directory /Users/williamnickols/Documents/GitHub/maaslin3_benchmark --cores 4 --tmp
 
-python3 general_evaluations/run_tools/workflow.py --generators ANCOM_BC_generator,SD2,SimSeq --working-directory /Users/williamnickols/Documents/GitHub/maaslin3_benchmark --cores 4 --tmp
+python3 general_evaluations/run_tools/workflow.py --generators ANCOM_BC_generator,SD2,SimSeq --working-directory /Users/williamnickols/Documents/GitHub/maaslin3_benchmark --cores 6 --tmp
 ```
 
 ```
@@ -56,7 +56,7 @@ python general_evaluations/evaluate_general.py \
   --parameters general_evaluations/evaluate_general.txt \
   -o /n/hutlab12_nobackup/users/wnickols/maaslin3/maaslin3_benchmark \
   --grid-scratch /n/holyscratch01/huttenhower_lab/wnickols/maaslin3_benchmark/ \
-  --grid-partition 'shared' --grid-jobs 96 --cores 8 --time 180 --mem 2000 \
+  --grid-partition 'shared' --grid-jobs 96 --cores 20 --time 500 --mem 2000 \
   --local-jobs 12
 ```
 
