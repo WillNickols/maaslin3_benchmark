@@ -161,7 +161,7 @@ if (!outputs_already_exist){
                                     fixed_effects = colnames(metadata)[colnames(metadata) != "ID"], save_scatter = FALSE, 
                                     save_models = F, plot_heatmap = F, plot_scatter = F, max_significance = 0.1)$results
     } else{
-      fit_out <- Maaslin2::Maaslin2(features, metadata, min_abundance = 0, min_prevalence = 0.1, output = tmp_fit_out, 
+      fit_out <- Maaslin2::Maaslin2(abundance, metadata, min_abundance = 0, min_prevalence = 0.1, output = tmp_fit_out, 
                                     min_variance = 0, normalization = 'TSS', transform = 'log', analysis_method = 'LM', 
                                     random_effects = "ID", fixed_effects = colnames(metadata)[colnames(metadata) != "ID"], 
                                     save_scatter = FALSE, save_models = F, plot_heatmap = F, plot_scatter = F,

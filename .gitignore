@@ -1,5 +1,14 @@
 
 *.DS_Store
-Input/*
 output/*
 *.xlsx
+*.png
+*.ai
+*.tsv
+/Figures
+/Input
+/Output
+/iHMP/analysis/results
+/iHMP/analysis/tables
+.Rhistory
+iHMP/analysis/data/intensities_hmp2.csv

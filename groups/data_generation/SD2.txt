@@ -1,0 +1,11 @@
+metadataType: MVAgroup MVBgroup
+nMicrobes: 100
+nSubjects: 50 20 100 200 500
+spikeMicrobes: 0.1
+effectSize: 5 2 10
+effectPos: 0.5 0.8
+nMetadata: 1 0 2 5
+nGroups: 1 2 3
+nLevels: 3 5 10
+nPerSubject: 1 5 10
+readDepth: 50000

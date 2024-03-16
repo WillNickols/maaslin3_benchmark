@@ -21,7 +21,7 @@ this_directory = str(os.path.dirname(os.path.realpath(__file__))).rstrip('/') + 
 # Can run multiple simulation types or evaluations with this script
 
 # output, set this to the GitHub repository
-output = os.path.abspath(args.output.rstrip("/")) + "/"
+output = os.path.abspath(args.output.rstrip("general_evaluations/")) + "/"
 if not os.path.isdir(output):
 	os.makedirs(output)
 
@@ -54,7 +54,7 @@ def compute_generation_outputs(generator):
         nIterations = 5
     else:
         parameters_file = 'general_evaluations/data_generation/' + generator + '.txt'
-        nIterations = 10
+        nIterations = 100
     
     with open(str(parameters_file), 'r') as file:
         lines = file.readlines()
@@ -114,13 +114,14 @@ for generator in param_dict['generators']:
     else:
         generate_command = 'python3 general_evaluations/data_generation/' + generator + '_workflow.py --parameters general_evaluations/data_generation/' + generator + '.txt --working-directory ' + output + ' --cores ' + str(cores)
 
-    workflow.add_task_gridable(actions=generate_command,
-        targets=compute_generation_outputs(generator),
-        time=time,
-        mem=memory,
-        cores=cores,
-        partition=partition
-        )
+    if not all(os.path.exists(file_path) for file_path in compute_generation_outputs(generator)):
+        workflow.add_task_gridable(actions=generate_command,
+            targets=compute_generation_outputs(generator),
+            time=time,
+            mem=memory,
+            cores=cores,
+            partition=partition
+            )
 
 #############
 # Run tools #
@@ -214,13 +215,14 @@ for generator in param_dict['generators']:
             if args.tmp:
                 new_command = new_command + ' --nIterations 5'
 
-            workflow.add_task_gridable(actions=new_command,
-            depends=compute_generation_outputs(generator),
-            targets=compute_running_outputs(generator, tool, param),
-            time=time,
-            mem=memory,
-            cores=cores,
-            partition=partition
-            )
+            if not all(os.path.exists(file_path) for file_path in compute_running_outputs(generator, tool, param)):
+                workflow.add_task_gridable(actions=new_command,
+                depends=compute_generation_outputs(generator),
+                targets=compute_running_outputs(generator, tool, param),
+                time=time,
+                mem=memory,
+                cores=cores,
+                partition=partition
+                )
 
 workflow.go()

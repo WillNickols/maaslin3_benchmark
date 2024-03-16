@@ -167,6 +167,8 @@ if (!outputs_already_exist){
       random_formula <- NULL
     }
     
+    binary_cols <- colnames(metadata)[apply(metadata, 2, function(x){length(unique(x)) == 2})]
+    
     ancombc_out <- tryCatch({
       assays = S4Vectors::SimpleList(counts = as.matrix(abundance))
       smd = S4Vectors::DataFrame(metadata)
@@ -174,37 +176,82 @@ if (!outputs_already_exist){
         assays = assays,
         colData = smd)
       ancombc_out <- ancombc2(both_tse, fix_formula = fix_formula,
-                              rand_formula = random_formula, p_adj_method = "BH", alpha = 0.1)
+                              rand_formula = random_formula, p_adj_method = "BH", alpha = 0.1, struc_zero = T,
+                              group = binary_cols[1])
+      ancombc_out
     }, error = function(err) {
-      features_to_drop <- unlist(strsplit(gsub("\nPlease remove.*", "", gsub(".*taxa\\:\n", "", err)), ", "))
-      abundance <- abundance[!(rownames(abundance) %in% features_to_drop),]
-      assays = S4Vectors::SimpleList(counts = as.matrix(abundance))
-      smd = S4Vectors::DataFrame(metadata)
-      both_tse <- TreeSummarizedExperiment(
-        assays = assays,
-        colData = smd)
-      ancombc_out <- ancombc2(both_tse, fix_formula = fix_formula,
-                              rand_formula = random_formula, p_adj_method = "BH", alpha = 0.1)
-      return(ancombc_out)
+      if (grepl('nPlease remove', err)) {
+        tryCatch({
+        features_to_drop <- unlist(strsplit(gsub("\nPlease remove.*", "", gsub(".*taxa\\:\n", "", err)), ", "))
+        abundance <- abundance[!(rownames(abundance) %in% features_to_drop),]
+        assays = S4Vectors::SimpleList(counts = as.matrix(abundance))
+        smd = S4Vectors::DataFrame(metadata)
+        both_tse <- TreeSummarizedExperiment(
+          assays = assays,
+          colData = smd)
+        ancombc_out <- ancombc2(both_tse, fix_formula = fix_formula,
+                                rand_formula = random_formula, p_adj_method = "BH", alpha = 0.1, struc_zero = T,
+                                group = binary_cols[1])
+        return(ancombc_out)
+        }, error = function(err) {
+          return(NULL)
+        })
+      } else {
+        return(NULL)
+      }
     })
     
+    if (is.null(ancombc_out)) {
+      outputs <- data.frame(taxon = character(0),
+                            metadata = character(0),
+                            effect_size = character(0),
+                            pval = character(0),
+                            qval = character(0),
+                            associations = character(0))
+    }
     
-    glm.test <- ancombc_out$res
-    glm.test <- glm.test[,grepl("^taxon|^lfc_|^p_", colnames(glm.test))]
-    glm.test <- glm.test[,!grepl("Intercept", colnames(glm.test))]
+    outputs <- tryCatch({
+      glm.test <- ancombc_out$res
+      glm.test <- glm.test[,grepl("^taxon|^lfc_|^p_|^passed_ss_", colnames(glm.test))]
+      glm.test <- glm.test[,!grepl("Intercept", colnames(glm.test))]
+      
+      glm.test <- reshape2::melt(glm.test, id.vars = c("taxon"))
+      glm.test$metric <- gsub("_.*", "", glm.test$variable)
+      glm.test$variable <- gsub("^[^_]*_|^passed_ss_", "", glm.test$variable)
+      glm.test <- reshape2::dcast(formula = taxon + variable ~ metric, glm.test)
+      
+      struc_zeros <- ancombc_out$zero_ind[ancombc_out$zero_ind[,2] != ancombc_out$zero_ind[,3],]
+      glm.test <- rbind(glm.test, data.frame(taxon = struc_zeros$taxon,
+                                             variable = binary_cols[1],
+                                             lfc = ifelse(struc_zeros[,3] == F, Inf, -Inf),
+                                             p = 0,
+                                             passed = 1))
+      
+      outputs <- data.frame(taxon = glm.test$taxon,
+                            metadata = glm.test$variable,
+                            effect_size = glm.test$lfc,
+                            pval = glm.test$p,
+                            qval = p.adjust(glm.test$p, method = "BH"),
+                            error = ifelse(glm.test$passed == 1, NA, "sensitivity failed"),
+                            associations = ifelse(is.infinite(glm.test$lfc), "prevalence", "abundance"))
+      
+      outputs
+    }, error = function(err) {
+      return(NULL)
+    })
     
-    glm.test <- reshape2::melt(glm.test, id.vars = c("taxon"))
-    glm.test$metric <- gsub("_.*", "", glm.test$variable)
-    glm.test$variable <- gsub("^[^_]*_", "", glm.test$variable)
-    glm.test <- reshape2::dcast(formula = taxon + variable ~ metric, glm.test)
     sink()
     
-    outputs <- data.frame(taxon = glm.test$taxon,
-                          metadata = glm.test$variable,
-                          effect_size = glm.test$lfc,
-                          pval = glm.test$p,
-                          qval = p.adjust(glm.test$p, method = "BH"),
-                          associations = "abundance")
+    if (is.null(ancombc_out) | is.null(outputs)) {
+      return(data.frame(taxon = character(0),
+                        metadata = character(0),
+                        effect_size = character(0),
+                        pval = character(0),
+                        qval = character(0),
+                        error = character(0),
+                        associations = character(0)))
+    }
+    
     return(outputs)
   }
   
