@@ -83,9 +83,15 @@ python run_mpa.py -i /n/hutlab12_nobackup/data/hmp2_qc/ \
 
 The following commands run the iHMP analysis.
 ```
-python ibd_associations.py -o /n/holystore01/LABS/huttenhower_lab/Users/wnickols/maaslin3/maaslin3_benchmark/HMP2/analysis/  --workingDirectory /n/holystore01/LABS/huttenhower_lab/Users/wnickols/maaslin3/ --grid-partition 'sapphire' --grid-jobs 96 --cores 12 --time 240 --mem 80000   --local-jobs 12
+python ibd_associations.py \
+  -o /n/holystore01/LABS/huttenhower_lab/Users/wnickols/maaslin3/maaslin3_benchmark/HMP2/analysis/ \
+  --workingDirectory /n/holystore01/LABS/huttenhower_lab/Users/wnickols/maaslin3/ \
+  --grid-partition 'sapphire' --grid-jobs 96 --cores 12 --time 240 --mem 80000   --local-jobs 12
 
-python diet_associations.py -o /n/holystore01/LABS/huttenhower_lab/Users/wnickols/maaslin3/maaslin3_benchmark/HMP2/analysis_diet/  --workingDirectory /n/holystore01/LABS/huttenhower_lab/Users/wnickols/maaslin3/ --grid-partition 'sapphire' --grid-jobs 96 --cores 12 --time 240 --mem 80000   --local-jobs 12
+python diet_associations.py \
+  -o /n/holystore01/LABS/huttenhower_lab/Users/wnickols/maaslin3/maaslin3_benchmark/HMP2/analysis_diet/ \
+  --workingDirectory /n/holystore01/LABS/huttenhower_lab/Users/wnickols/maaslin3/ \
+  --grid-partition 'sapphire' --grid-jobs 96 --cores 12 --time 240 --mem 80000   --local-jobs 12
 ```
 
 [//]: # ( HALLA installed by creating conda environment for rpy2, pip installing all the other packages, editing out the sklearn requirement of requirements.txt and using setup.py )
