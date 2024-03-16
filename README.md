@@ -63,7 +63,7 @@ python unscaled/evaluate_unscaled.py \
 ## iHMP analysis
 
 The `scripts` folder contains the script to perform the MetaPhlAn analysis of the iHMP data and the command to perform the HAllA analysis. The `results` folder contains the following:
-- A `data` folder with the taxonomic profiles, metabolomic profiles, and patient metadata
+- A `data` folder with the taxonomic profiles, metabolomic profiles, and patient metadata. Because of its size, the metabolomics file should be separately downloaded into this folder as `intensities_hmp2.csv`.
 - A `run_scripts` folder with scripts to run each differential abundance tool
 - A `diet_associations.py` script to run MaAsLin 3 for diet associations
 - An `ibd_associations.py` script to run all differential abundance tools
