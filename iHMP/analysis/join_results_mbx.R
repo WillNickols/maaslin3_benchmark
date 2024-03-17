@@ -3,6 +3,7 @@ library(reshape2)
 library(dplyr)
 library(ggplot2)
 library(stringr)
+library(plyr)
 
 workingDirectory <- "~/Documents/GitHub/maaslin3_benchmark"
 figures_folder <- paste0(workingDirectory, '/Figures/thesis_figures/')
@@ -351,48 +352,25 @@ for (result in all_results[grepl('Maaslin3|Maaslin2', all_results) & grepl('^mbx
   growing_df <- rbind(growing_df, fit_out_joint)
 }
 
-growing_df <- growing_df[growing_df$feature %in% keep_taxa,]
+growing_df <- growing_df[growing_df$feature %in% make.names(keep_taxa),]
 growing_df$association_name <- paste0(growing_df$feature, '-', growing_df$metadata_value, '-', growing_df$association)
 
 for_scatter <- growing_df[growing_df$association %in% c('abundance'), c("association_name", "coef", "qval", "tool")]
 split1 <- for_scatter[for_scatter$tool == 'Maaslin3',]
-split2 <- for_scatter[for_scatter$tool == 'Maaslin3ItAug',]
 split3 <- for_scatter[for_scatter$tool == 'Maaslin2',]
 colnames(split1) <- c('association_name', 'Maaslin3', 'qval_Maaslin3', 'tool')
-colnames(split2) <- c('association_name', 'Maaslin3ItAug', 'qval_Maaslin3ItAug', 'tool')
 colnames(split3) <- c('association_name', 'Maaslin2', 'qval_Maaslin2', 'tool')
 split1$tool <- NULL
-split2$tool <- NULL
 split3$tool <- NULL
-joined_df <- full_join(split2, split1, by=c('association_name'))
-joined_df <- full_join(joined_df, split3, by=c('association_name'))
-joined_df$color <- paste0(ifelse(!is.na(joined_df$qval_Maaslin3ItAug) & joined_df$qval_Maaslin3ItAug < 0.1, 'v3ItAug,', ''),
-                          ifelse(!is.na(joined_df$qval_Maaslin3) & joined_df$qval_Maaslin3 < 0.1, 'v3,', ''),
+joined_df <- full_join(split1, split3, by=c('association_name'))
+joined_df$color <- paste0(ifelse(!is.na(joined_df$qval_Maaslin3) & joined_df$qval_Maaslin3 < 0.1, 'v3,', ''),
                           ifelse(!is.na(joined_df$qval_Maaslin2) & joined_df$qval_Maaslin2 < 0.1, 'v2', ''))
 joined_df$association <- 'abundance'
 joined_df_abun <- joined_df[!is.na(joined_df$color) & joined_df$color != '',]
 
-for_scatter <- growing_df[growing_df$association %in% c('prevalence'), c("association_name", "coef", "qval", "tool")]
-split1 <- for_scatter[for_scatter$tool == 'Maaslin3',]
-split2 <- for_scatter[for_scatter$tool == 'Maaslin3ItAug',]
-split3 <- for_scatter[for_scatter$tool == 'Maaslin2',]
-colnames(split1) <- c('association_name', 'Maaslin3', 'qval_Maaslin3', 'tool')
-colnames(split2) <- c('association_name', 'Maaslin3ItAug', 'qval_Maaslin3ItAug', 'tool')
-colnames(split3) <- c('association_name', 'Maaslin2', 'qval_Maaslin2', 'tool')
-split1$tool <- NULL
-split2$tool <- NULL
-split3$tool <- NULL
-joined_df <- full_join(split2, split1, by=c('association_name'))
-joined_df <- full_join(joined_df, split3, by=c('association_name'))
-joined_df$color <- paste0(ifelse(!is.na(joined_df$qval_Maaslin3ItAug) & joined_df$qval_Maaslin3ItAug < 0.1, 'v3ItAug,', ''),
-                          ifelse(!is.na(joined_df$qval_Maaslin3) & joined_df$qval_Maaslin3 < 0.1, 'v3,', ''),
-                          ifelse(!is.na(joined_df$qval_Maaslin2) & joined_df$qval_Maaslin2 < 0.1, 'v2', ''))
-joined_df$association <- 'prevalence'
-joined_df_prev <- joined_df[!is.na(joined_df$color) & joined_df$color != '',]
-
-joined_df <- rbind(joined_df_abun, joined_df_prev)
+joined_df <- joined_df_abun
 joined_df$association_name <- gsub('-|abundance|prevalence', ' ', joined_df$association_name)
-joined_df <- joined_df[,c('association_name', 'Maaslin3ItAug', 'Maaslin3', 'Maaslin2', 'qval_Maaslin3ItAug', 'qval_Maaslin3', 'qval_Maaslin2', 'color', 'association')]
+joined_df <- joined_df[,c('association_name', 'Maaslin3', 'Maaslin2', 'qval_Maaslin3', 'qval_Maaslin2', 'color', 'association')]
 
 taxa_abun_vec <- rowMeans(mbx_table)
 names(taxa_abun_vec) <- make.names(names(taxa_abun_vec))
