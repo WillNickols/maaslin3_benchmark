@@ -109,7 +109,7 @@ metadata$participant_id <- metadata$`Participant ID`
 metadata$diagnosis <- factor(metadata$diagnosis, levels = c('nonIBD', 'UC', 'CD'))
 
 metadata <- metadata[metadata$sample %in% colnames(taxa_table),]
-mm <- model.matrix(formula(paste0("~ diagnosis + dysbiosis_state + Antibiotics + consent_age")), metadata)
+mm <- model.matrix(formula(paste0("~ diagnosis + dysbiosis_state + Antibiotics + consent_age + participant_id")), metadata)
 
 taxa_table_in <- round(taxa_table / min(taxa_table[taxa_table > 0]))
 
@@ -118,7 +118,7 @@ taxa_table_in <- taxa_table_in[rownames(taxa_table_in) %in% rownames(mm),]
 taxa_table_in <- t(taxa_table_in)
 
 aldex_clr_out <- aldex.clr(taxa_table_in, mm, denom="all", useMC = F)
-glm.test <- aldex.glm(aldex_clr_out)
+glm.test <- aldex.glm(aldex_clr_out, verbose=T)
 
 glm.test <- glm.test[,grepl("Est$|pval$", colnames(glm.test))]
 

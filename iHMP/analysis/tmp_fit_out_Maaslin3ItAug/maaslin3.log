@@ -1,0 +1,46 @@
+2024-05-28 11:56:42.884949 INFO::Writing function arguments to log file
+2024-05-28 11:56:42.887422 DEBUG::Function arguments
+2024-05-28 11:56:42.887811 DEBUG::Output folder: ~/Documents/GitHub/maaslin3_benchmark/iHMP/analysis/tmp_fit_out_Maaslin3ItAug
+2024-05-28 11:56:42.88812 DEBUG::Min Abundance: 0.000000
+2024-05-28 11:56:42.888385 DEBUG::Zero Threshold: 0.000000
+2024-05-28 11:56:42.888645 DEBUG::Min Prevalence: 0.000000
+2024-05-28 11:56:42.888902 DEBUG::Normalization: TSS
+2024-05-28 11:56:42.889155 DEBUG::Transform: LOG
+2024-05-28 11:56:42.889393 DEBUG::Analysis method: LM
+2024-05-28 11:56:42.889631 DEBUG::Max significance: 0.100000
+2024-05-28 11:56:42.889858 DEBUG::Random effects:
+2024-05-28 11:56:42.89029 DEBUG::Group effects:
+2024-05-28 11:56:42.890641 DEBUG::Gomp effects:
+2024-05-28 11:56:42.890897 DEBUG::Omp effects:
+2024-05-28 11:56:42.891136 DEBUG::Fixed effects:
+2024-05-28 11:56:42.891355 DEBUG::Formula: ~ diagnosis + Antibiotics + consent_age + (1 | participant_id)
+2024-05-28 11:56:42.891572 DEBUG::Correction method: BH
+2024-05-28 11:56:42.891783 DEBUG::Standardize: TRUE
+2024-05-28 11:56:42.891992 DEBUG::Cores: 4
+2024-05-28 11:56:42.892198 DEBUG::Iterative mode: TRUE
+2024-05-28 11:56:42.892406 DEBUG::Augment: TRUE
+2024-05-28 11:56:42.892672 INFO::Verifying options selected are valid
+2024-05-28 11:56:42.893474 INFO::Determining format of input files
+2024-05-28 11:56:42.894311 INFO::Input format is data samples as columns and metadata samples as rows
+2024-05-28 11:56:42.941409 DEBUG::Transformed data so samples are rows
+2024-05-28 11:56:42.963662 DEBUG::The following samples were found to have metadata but no features. They will be removed. HSM67VGE_P
+2024-05-28 11:56:42.963958 DEBUG::A total of 1637 samples were found in both the data and metadata
+2024-05-28 11:56:42.964106 DEBUG::Reordering data/metadata to use same sample ordering
+2024-05-28 11:56:42.977758 INFO::Formula for random effects: expr ~ diagnosis + Antibiotics + consent_age + (1 | participant_id)
+2024-05-28 11:56:42.978278 INFO::Filter data based on min abundance and min prevalence
+2024-05-28 11:56:42.9786 INFO::Total samples in data: 1637
+2024-05-28 11:56:42.978901 INFO::Min samples required with min abundance for a feature not to be filtered: 0.000000
+2024-05-28 11:56:43.036448 INFO::Total filtered features: 0
+2024-05-28 11:56:43.037082 INFO::Filtered feature names from abundance and prevalence filtering:
+2024-05-28 11:56:43.243503 INFO::Total filtered features with variance filtering: 0
+2024-05-28 11:56:43.244165 INFO::Filtered feature names from variance filtering:
+2024-05-28 11:56:43.244534 INFO::Writing filtered data to file ~/Documents/GitHub/maaslin3_benchmark/iHMP/analysis/tmp_fit_out_Maaslin3ItAug/features/filtered_data.tsv
+2024-05-28 11:56:43.951114 INFO::Applying z-score to standardize continuous metadata
+2024-05-28 11:56:43.960185 INFO::Running selected normalization method: TSS
+2024-05-28 11:56:44.148651 INFO::Writing filtered, normalized data to file ~/Documents/GitHub/maaslin3_benchmark/iHMP/analysis/tmp_fit_out_Maaslin3ItAug/features/filtered_data_norm.tsv
+2024-05-28 11:56:44.493231 INFO::Running selected transform method: LOG
+2024-05-28 11:56:44.720653 INFO::Writing filtered, normalized, transformed data to file ~/Documents/GitHub/maaslin3_benchmark/iHMP/analysis/tmp_fit_out_Maaslin3ItAug/features/filtered_data_norm_transformed.tsv
+2024-05-28 11:56:45.083955 INFO::Running selected analysis method: LM
+2024-05-28 11:56:45.13715 INFO::Creating cluster of 4 R processes
+2024-05-28 11:58:32.867063 INFO::Counting total values for each feature
+2024-05-28 11:58:33.103353 INFO::Creating cluster of 4 R processes
