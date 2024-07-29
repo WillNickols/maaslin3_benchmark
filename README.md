@@ -9,6 +9,8 @@ install.packages(c('dplyr', 'pbapply', 'lmerTest', 'parallel', 'lme4', 'plyr', '
 install.packages(c("pkgmaker", "stringi", "doParallel", "SimSeq", "tidyr", "devtools", "TcGSA", "MCMCprecision")) # Come back to install devtools if necessary
 install.packages("BiocManager")
 BiocManager::install(c("phyloseq", "microbiome", "SparseDOSSA2", "ALDEx2", "ANCOMBC", "TreeSummarizedExperiment", "Maaslin2"))
+library("devtools")
+install_github("biobakery/MaAsLin3")
 ```
 
 ## Evaluations
@@ -29,7 +31,7 @@ The following command runs the general evaluation with all generators.
 python general_evaluations/evaluate_general.py \
   --parameters general_evaluations/evaluate_general.txt \
   -o /n/holystore01/LABS/huttenhower_lab/Users/wnickols/maaslin3/maaslin3_benchmark/general_evaluations/ \
-  --grid-partition 'sapphire' --grid-jobs 96 --cores 12 --time 1200 --mem 30000 \
+  --grid-partition 'sapphire' --grid-jobs 96 --cores 12 --time 240 --mem 30000 \
   --local-jobs 12
 ```
 
@@ -38,7 +40,7 @@ The following command runs the OMP and GOMP evaluations.
 python omps/evaluate_omps.py \
   --parameters omps/evaluate_omps.txt \
   -o /n/holystore01/LABS/huttenhower_lab/Users/wnickols/maaslin3/maaslin3_benchmark/omps/ \
-  --grid-partition 'sapphire' --grid-jobs 96 --cores 20 --time 240 --mem 40000 \
+  --grid-partition 'hsph' --grid-jobs 96 --cores 20 --time 240 --mem 40000 \
   --local-jobs 12
 ```
 
@@ -58,6 +60,41 @@ python unscaled/evaluate_unscaled.py \
   -o /n/holystore01/LABS/huttenhower_lab/Users/wnickols/maaslin3/maaslin3_benchmark/unscaled/  \
   --grid-partition 'sapphire' --grid-jobs 96 --cores 12 --time 240 --mem 30000  \
   --local-jobs 12
+```
+
+The following command runs the community shift evaluations.
+```
+python community_shift/evaluate_community_shift.py \
+  --parameters community_shift/evaluate_community_shift.txt  \
+  -o /n/holystore01/LABS/huttenhower_lab/Users/wnickols/maaslin3/maaslin3_benchmark/community_shift/  \
+  --grid-partition 'sapphire' --grid-jobs 96 --cores 12 --time 240 --mem 30000  \
+  --local-jobs 12
+```
+
+The following command runs the deep sequencing evaluations.
+```
+python deep_sequencing/evaluate_deep_sequencing.py \
+  --parameters deep_sequencing/evaluate_deep_sequencing.txt  \
+  -o /n/holystore01/LABS/huttenhower_lab/Users/wnickols/maaslin3/maaslin3_benchmark/deep_sequencing/  \
+  --grid-partition 'sapphire' --grid-jobs 96 --cores 12 --time 240 --mem 30000  \
+  --local-jobs 12
+```
+
+The following command runs the randomization test evaluations.
+```
+python randomization_test/evaluate_randomization.py \
+  -o /n/holystore01/LABS/huttenhower_lab/Users/wnickols/maaslin3/maaslin3_benchmark/randomization_test/  \
+  --grid-partition 'sapphire' --grid-jobs 104 --cores 1 --time 240 --mem 40000  \
+  --local-jobs 36
+```
+
+The following command runs the low rep evaluations.
+```
+python low_rep/evaluate_low_rep.py \
+  --parameters low_rep/evaluate_low_rep.txt  \
+  -o /n/holystore01/LABS/huttenhower_lab/Users/wnickols/maaslin3/maaslin3_benchmark/low_rep/  \
+  --cores 5 --time 240 --mem 40000  \
+  --local-jobs 8
 ```
 
 ## iHMP analysis
@@ -86,15 +123,33 @@ The following commands run the iHMP analysis.
 python ibd_associations.py \
   -o /n/holystore01/LABS/huttenhower_lab/Users/wnickols/maaslin3/maaslin3_benchmark/HMP2/analysis/ \
   --workingDirectory /n/holystore01/LABS/huttenhower_lab/Users/wnickols/maaslin3/ \
-  --grid-partition 'sapphire' --grid-jobs 96 --cores 12 --time 240 --mem 80000   --local-jobs 12
+  --grid-partition 'sapphire' --grid-jobs 96 --cores 24 --time 240 --mem 80000   --local-jobs 12
 
 python diet_associations.py \
   -o /n/holystore01/LABS/huttenhower_lab/Users/wnickols/maaslin3/maaslin3_benchmark/HMP2/analysis_diet/ \
   --workingDirectory /n/holystore01/LABS/huttenhower_lab/Users/wnickols/maaslin3/ \
-  --grid-partition 'sapphire' --grid-jobs 96 --cores 12 --time 240 --mem 80000   --local-jobs 12
+  --grid-partition 'hsph' --grid-jobs 48 --cores 1 --time 240 --mem 80000   --local-jobs 12
 ```
 
 [//]: # ( HALLA installed by creating conda environment for rpy2, pip installing all the other packages, editing out the sklearn requirement of requirements.txt and using setup.py )
+
+```
+python CRC_associations.py \
+  -o /n/holystore01/LABS/huttenhower_lab/Users/wnickols/maaslin3/maaslin3_benchmark/CRC/analysis/ \
+  --workingDirectory /n/holystore01/LABS/huttenhower_lab/Users/wnickols/maaslin3/ \
+  --grid-partition 'sapphire' --grid-jobs 96 --cores 12 --time 240 --mem 120000   --local-jobs 12
+```
+
+## MTX analysis
+
+```
+python mtx/evaluate_mtx.py \
+  -o /n/holystore01/LABS/huttenhower_lab/Users/wnickols/maaslin3/maaslin3_benchmark/mtx/  \
+  --grid-partition 'sapphire' --grid-jobs 96 --cores 2 --time 240 --mem 30000  \
+  --local-jobs 12
+```
+
+
 
 
 

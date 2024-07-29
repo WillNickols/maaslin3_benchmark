@@ -1,13 +1,13 @@
 SparseDOSSA2_spike <- function(template = "Stool",
-                         n_sample = 100,
-                         new_features = TRUE,
-                         n_feature = 100,
-                         spike_metadata = "none",
-                         metadata_effect_size = 1,
-                         perc_feature_spiked_metadata = 0.05,
-                         metadata_matrix = NULL,
-                         median_read_depth = 50000,
-                         verbose = TRUE) {
+                               n_sample = 100,
+                               new_features = TRUE,
+                               n_feature = 100,
+                               spike_metadata = "none",
+                               metadata_effect_size = 1,
+                               perc_feature_spiked_metadata = 0.05,
+                               metadata_matrix = NULL,
+                               median_read_depth = 50000,
+                               verbose = TRUE) {
   if(is.character(template)) {
     if(!template %in% c("Stool", "Vaginal", "IBD"))
       stop("Pre-trained template must be one of \"Stool\", \"Vaginal\", or \"IBD\"!")
@@ -49,8 +49,8 @@ SparseDOSSA2_spike <- function(template = "Stool",
   if(verbose) 
     message("Generating null absolute abundance matrix...")
   mat_null <- generate_a(n = n_sample,
-                         feature_param = feature_param,
-                         Omega = Omega)
+                                        feature_param = feature_param,
+                                        Omega = Omega)
   
   # generate spiked-in association with metadata
   if(!(is.character(spike_metadata) | is.data.frame(spike_metadata)))
@@ -60,6 +60,9 @@ SparseDOSSA2_spike <- function(template = "Stool",
                                 choices = c("none", "abundance", 
                                             "prevalence", "both"))
   }
+  
+  spike_in_abs_abun <- NULL
+  
   if(identical(spike_metadata, "none")) {
     if(verbose)
       message("spike_metadata is \"none\", ",
@@ -153,11 +156,13 @@ SparseDOSSA2_spike <- function(template = "Stool",
               "associations...")
     mat_spiked_metadata <- 
       spike_a_metadata(null = mat_null,
-                       feature_param = feature_param,
-                       metadata = metadata_matrix,
-                       spike_df = feature_metadata_spike_df)
-    mat_spiked_metadata <- rbind(mat_spiked_metadata, rep(1000, ncol(mat_spiked_metadata))) # add reference
-    rownames(mat_spiked_metadata) <- c(rownames(mat_spiked_metadata)[-nrow(mat_spiked_metadata)], paste0('Feature', nrow(mat_spiked_metadata)))
+                                      feature_param = feature_param,
+                                      metadata = metadata_matrix,
+                                      spike_df = feature_metadata_spike_df)
+    spike_in_abs_abun <- round(colSums(mat_spiked_metadata) / runif(ncol(mat_spiked_metadata), 1, 10))
+    mat_spiked_metadata <- rbind(mat_spiked_metadata, spike_in_abs_abun)
+    rownames(mat_spiked_metadata) <- c(rownames(mat_spiked_metadata)[-nrow(mat_spiked_metadata)], 
+                                       paste0('Feature', nrow(mat_spiked_metadata)))
   }
   
   mat_rel <- apply(mat_spiked_metadata, 2, TSS)
@@ -186,7 +191,8 @@ SparseDOSSA2_spike <- function(template = "Stool",
               spike_metadata = list(spike_metadata = spike_metadata,
                                     metadata_matrix = metadata_matrix,
                                     feature_metadata_spike_df = 
-                                      feature_metadata_spike_df)))
+                                      feature_metadata_spike_df),
+              spike_in_abs_abun = spike_in_abs_abun))
 }
 
 environment(SparseDOSSA2_spike) <- asNamespace('SparseDOSSA2')

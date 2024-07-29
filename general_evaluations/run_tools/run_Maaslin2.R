@@ -137,11 +137,24 @@ if (!outputs_already_exist){
     abundance <- read.csv(paste0(this_params_folder, "/abundance_", i, ".tsv"), sep = "\t")
     truth <- read.csv(paste0(this_params_folder, "/truth_", i, ".tsv"), sep = "\t")
     
-    for (col in names(metadata)[names(metadata) != "ID"]) {
-      if (all(metadata[[col]] %in% c(0, 1))) {
-        metadata[[col]] <- as.character(metadata[[col]])
-      } else {
-        metadata[[col]] <- as.numeric(metadata[[col]])
+    # Remove features or samples never present
+    abundance <- abundance[apply(abundance, 1, var) != 0,]
+    abundance <- abundance[,apply(abundance, 2, var) != 0]
+    
+    # Get read depths
+    read_depths <- data.frame(sample = names(colSums(abundance)),
+                              read_depth = colSums(abundance))
+    metadata$sample <- rownames(metadata)
+    metadata <- left_join(metadata, read_depths, by = 'sample')
+    rownames(metadata) <- metadata$sample
+    metadata$sample <- NULL
+    
+    # Convert to relative abundance
+    abundance <- t(t(abundance) / colSums(abundance))
+    
+    for (column in colnames(metadata)) {
+      if (length(unique(metadata[,column])) == 2) {
+        metadata[,column] <- as.factor(metadata[,column])
       }
     }
     
@@ -156,16 +169,20 @@ if (!outputs_already_exist){
     
     sink('/dev/null')
     if(length(ID)==length(unique(ID))){
-      fit_out <- Maaslin2::Maaslin2(abundance, metadata, min_abundance = 0, min_prevalence = 0.1, output = tmp_fit_out, 
+      fit_out <- Maaslin2::Maaslin2(abundance, metadata, min_abundance = 0, min_prevalence = 0, output = tmp_fit_out, 
                                     min_variance = 0, normalization = 'TSS', transform = 'LOG', analysis_method = 'LM', 
                                     fixed_effects = colnames(metadata)[colnames(metadata) != "ID"], save_scatter = FALSE, 
                                     save_models = F, plot_heatmap = F, plot_scatter = F, max_significance = 0.1)$results
     } else{
-      fit_out <- Maaslin2::Maaslin2(abundance, metadata, min_abundance = 0, min_prevalence = 0.1, output = tmp_fit_out, 
+      fit_out <- Maaslin2::Maaslin2(abundance, metadata, min_abundance = 0, min_prevalence = 0, output = tmp_fit_out, 
                                     min_variance = 0, normalization = 'TSS', transform = 'log', analysis_method = 'LM', 
                                     random_effects = "ID", fixed_effects = colnames(metadata)[colnames(metadata) != "ID"], 
                                     save_scatter = FALSE, save_models = F, plot_heatmap = F, plot_scatter = F,
                                     max_significance = 0.1)$results
+    }
+    # MaAsLin 2 doesn't close logger - grr
+    if ('logging::writeToFile' %in% names(logging::getLogger()[['handlers']])) {
+      logging::removeHandler('logging::writeToFile')
     }
     sink()
     

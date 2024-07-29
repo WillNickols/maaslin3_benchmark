@@ -2,7 +2,7 @@
 
 remove(list = ls())
 package_vec = c("devtools", "pkgmaker", "optparse", 
-                "parallel", "stringi", "doParallel", "plyr", "tidyr")
+                "parallel", "stringi", "doParallel", "plyr", "tidyr", "maaslin3")
 invisible(suppressPackageStartupMessages(lapply(package_vec, require, character.only = TRUE)))
 
 # Command Line Usage
@@ -126,11 +126,6 @@ if (!dir.exists(this_output_folder)) {
   }
 }
 
-Maaslin3_path <- paste0(gsub("/[^/]*$", "", gsub("/$", "", workingDirectory)), "/Maaslin3/R/")
-for (R_file in dir(Maaslin3_path, pattern = "*.R$")) {
-  source(file.path(Maaslin3_path, R_file))
-}
-
 # Run the Model Only if the Output Does Not Exist
 if (!outputs_already_exist){
   no_cores <- nCores
@@ -142,11 +137,24 @@ if (!outputs_already_exist){
     abundance <- read.csv(paste0(this_params_folder, "/abundance_", i, ".tsv"), sep = "\t")
     truth <- read.csv(paste0(this_params_folder, "/truth_", i, ".tsv"), sep = "\t")
     
-    for (col in names(metadata)[names(metadata) != "ID"]) {
-      if (all(metadata[[col]] %in% c(0, 1))) {
-        metadata[[col]] <- as.character(metadata[[col]])
-      } else {
-        metadata[[col]] <- as.numeric(metadata[[col]])
+    # Remove features or samples never present
+    abundance <- abundance[apply(abundance, 1, var) != 0,]
+    abundance <- abundance[,apply(abundance, 2, var) != 0]
+    
+    # Get read depths
+    read_depths <- data.frame(sample = names(colSums(abundance)),
+                              read_depth = colSums(abundance))
+    metadata$sample <- rownames(metadata)
+    metadata <- left_join(metadata, read_depths, by = 'sample')
+    rownames(metadata) <- metadata$sample
+    metadata$sample <- NULL
+    
+    # Convert to relative abundance
+    abundance <- t(t(abundance) / colSums(abundance))
+    
+    for (column in colnames(metadata)) {
+      if (length(unique(metadata[,column])) == 2) {
+        metadata[,column] <- as.factor(metadata[,column])
       }
     }
     
@@ -161,28 +169,42 @@ if (!outputs_already_exist){
     
     sink('/dev/null')
     if(length(ID)==length(unique(ID))){
-      param_list <- list(input_data = abundance, input_metadata = metadata, min_abundance = 0, min_prevalence = 0.0, output = tmp_fit_out, 
-                                    min_variance = 0, normalization = 'TSS', transform = 'LOG', analysis_method = 'LM', 
-                                    fixed_effects = colnames(metadata)[colnames(metadata) != "ID"], save_scatter = FALSE, 
-                                    save_models = F, plot_heatmap = F, plot_scatter = F, max_significance = 0.1)
+      param_list <- list(input_data = abundance, 
+                         input_metadata = metadata, 
+                         output = tmp_fit_out, 
+                         normalization = 'TSS', 
+                         transform = 'LOG',
+                         fixed_effects = colnames(metadata)[colnames(metadata) != "ID"], 
+                         median_comparison_abundance = F, 
+                         median_comparison_prevalence = F,
+                         plot_summary_plot = F, 
+                         plot_associations = F, 
+                         max_significance = 0.1)
     } else{
-      param_list <- list(input_data = abundance, input_metadata = metadata, min_abundance = 0, min_prevalence = 0.0, output = tmp_fit_out, 
-                                    min_variance = 0, normalization = 'TSS', transform = 'log', analysis_method = 'LM', 
-                                    random_effects = "ID", fixed_effects = colnames(metadata)[colnames(metadata) != "ID"], 
-                                    save_scatter = FALSE, save_models = F, plot_heatmap = F, plot_scatter = F,
-                                    max_significance = 0.1)
+      param_list <- list(input_data = abundance, 
+                         input_metadata = metadata, 
+                         output = tmp_fit_out, 
+                         normalization = 'TSS', 
+                         transform = 'LOG',
+                         fixed_effects = colnames(metadata)[colnames(metadata) != "ID"],
+                         random_effects = "ID", 
+                         median_comparison_abundance = F, 
+                         median_comparison_prevalence = F,
+                         plot_summary_plot = F, 
+                         plot_associations = F, 
+                         max_significance = 0.1)
     }
-    fit_out <- Maaslin3(param_list)
+    fit_out <- maaslin3::maaslin3(param_list)
     sink()
     
     unlink(tmp_fit_out, recursive = T)
     
-    fit_out_lm <- fit_out$fit_data_non_zero$results
-    fit_out_lm <- fit_out_lm[c("feature", "metadata", "coef", "pval_single", "error", "qval_single", "pval_joint", "qval_joint")]
+    fit_out_lm <- fit_out$fit_data_abundance$results
+    fit_out_lm <- fit_out_lm[c("feature", "metadata", "coef", "pval_individual", "error", "qval_individual", "pval_joint", "qval_joint")]
     fit_out_lm$association <- "abundance"
     
-    fit_out_binary <- fit_out$fit_data_binary$results
-    fit_out_binary <- fit_out_binary[c("feature", "metadata", "coef", "pval_single", "error", "qval_single", "pval_joint", "qval_joint")]
+    fit_out_binary <- fit_out$fit_data_prevalence$results
+    fit_out_binary <- fit_out_binary[c("feature", "metadata", "coef", "pval_individual", "error", "qval_individual", "pval_joint", "qval_joint")]
     fit_out_binary$association <- "prevalence"
     
     fit_out <- full_join(fit_out_lm, fit_out_binary, by = colnames(fit_out_lm))
@@ -190,8 +212,8 @@ if (!outputs_already_exist){
     outputs <- data.frame(taxon = fit_out$feature,
                           metadata = fit_out$metadata,
                           effect_size = fit_out$coef,
-                          pval = fit_out$pval_single,
-                          qval = fit_out$qval_single,
+                          pval = fit_out$pval_individual,
+                          qval = fit_out$qval_individual,
                           pval_joint = fit_out$pval_joint,
                           qval_joint = fit_out$qval_joint,
                           error = fit_out$error,

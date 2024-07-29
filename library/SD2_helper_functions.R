@@ -978,7 +978,7 @@ sparseDOSSA2_Wrapper_unscaled <- function(simparams, simparamslabels, noZeroInfl
                  abundance_unscaled <- data.frame('total' = colSums(DD$simulated_matrices$a_spiked))
                  rownames(abundance_unscaled) <- colnames(DD$simulated_matrices$a_spiked)
                } else if (metadataType == 'MVAref') {
-                 abundance_unscaled <- data.frame('reference' = rep(1, ncol(sparsedossa_results)))
+                 abundance_unscaled <- data.frame('reference' = DD$spike_in_abs_abun)
                  colnames(abundance_unscaled) <- rownames(sparsedossa_results)[nrow(sparsedossa_results)]
                  rownames(abundance_unscaled) <- colnames(DD$simulated_matrices$a_spiked)
                }

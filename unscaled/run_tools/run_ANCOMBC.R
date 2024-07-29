@@ -137,13 +137,24 @@ if (!outputs_already_exist){
     abundance <- read.csv(paste0(this_params_folder, "/abundance_", i, ".tsv"), sep = "\t")
     truth <- read.csv(paste0(this_params_folder, "/truth_", i, ".tsv"), sep = "\t")
     
-    abundance <- abundance[apply(abundance, 1, var) != 0,]
+    # Remove spike-in
+    abundance <- abundance[1:(nrow(abundance) - 1),]
     
-    for (col in names(metadata)[names(metadata) != "ID"]) {
-      if (all(metadata[[col]] %in% c(0, 1))) {
-        metadata[[col]] <- as.character(metadata[[col]])
-      } else {
-        metadata[[col]] <- as.numeric(metadata[[col]])
+    # Get read depths
+    abundance <- abundance[apply(abundance, 1, var) != 0,]
+    read_depths <- data.frame(sample = names(colSums(abundance)),
+                              read_depth = colSums(abundance))
+    metadata$sample <- rownames(metadata)
+    metadata <- left_join(metadata, read_depths, by = 'sample')
+    rownames(metadata) <- metadata$sample
+    metadata$sample <- NULL
+    
+    # Don't convert to relative abundance
+    # abundance <- t(t(abundance) / colSums(abundance))
+    
+    for (column in colnames(metadata)) {
+      if (length(unique(metadata[,column])) == 2) {
+        metadata[,column] <- as.factor(metadata[,column])
       }
     }
     
@@ -154,21 +165,14 @@ if (!outputs_already_exist){
     }
     
     sink('/dev/null')
-    if ('ID' %in% colnames(metadata)) {
-      if (length(unique(metadata$ID)) == length(metadata$ID)) { # No random effect
-        fix_formula <- paste0(colnames(metadata)[colnames(metadata) != "ID"], collapse = " + ")
-        random_formula <- NULL
-      } else { # Random effect
-        fix_formula <- paste0(colnames(metadata)[colnames(metadata) != "ID"], collapse = " + ")
-        random_formula <- "(1|ID)"
-      }
-    } else { # No random effect
-      fix_formula <- paste0(colnames(metadata)[colnames(metadata) != "ID"], collapse = " + ")
+    if ('ID' %in% colnames(metadata) & length(unique(metadata$ID)) != length(metadata$ID)) {
+      fix_formula <- paste0(colnames(metadata)[!colnames(metadata) %in% c("ID", "read_depth")], collapse = " + ")
+      random_formula <- "(1|ID)"
+    } else {
+      fix_formula <- paste0(colnames(metadata)[!colnames(metadata) %in% c("ID", "read_depth")], collapse = " + ")
       random_formula <- NULL
     }
-    
-    binary_cols <- colnames(metadata)[apply(metadata, 2, function(x){length(unique(x)) == 2})]
-    
+  
     ancombc_out <- tryCatch({
       assays = S4Vectors::SimpleList(counts = as.matrix(abundance))
       smd = S4Vectors::DataFrame(metadata)
@@ -176,23 +180,23 @@ if (!outputs_already_exist){
         assays = assays,
         colData = smd)
       ancombc_out <- ancombc2(both_tse, fix_formula = fix_formula,
-                              rand_formula = random_formula, p_adj_method = "BH", alpha = 0.1, struc_zero = T,
-                              group = binary_cols[1])
+                              rand_formula = random_formula, p_adj_method = "BH", 
+                              alpha = 0.1, prv_cut = 0)
       ancombc_out
     }, error = function(err) {
       if (grepl('nPlease remove', err)) {
         tryCatch({
-          features_to_drop <- unlist(strsplit(gsub("\nPlease remove.*", "", gsub(".*taxa\\:\n", "", err)), ", "))
-          abundance <- abundance[!(rownames(abundance) %in% features_to_drop),]
-          assays = S4Vectors::SimpleList(counts = as.matrix(abundance))
-          smd = S4Vectors::DataFrame(metadata)
-          both_tse <- TreeSummarizedExperiment(
-            assays = assays,
-            colData = smd)
-          ancombc_out <- ancombc2(both_tse, fix_formula = fix_formula,
-                                  rand_formula = random_formula, p_adj_method = "BH", alpha = 0.1, struc_zero = T,
-                                  group = binary_cols[1])
-          return(ancombc_out)
+        features_to_drop <- unlist(strsplit(gsub("\nPlease remove.*", "", gsub(".*taxa\\:\n", "", err)), ", "))
+        abundance <- abundance[!(rownames(abundance) %in% features_to_drop),]
+        assays = S4Vectors::SimpleList(counts = as.matrix(abundance))
+        smd = S4Vectors::DataFrame(metadata)
+        both_tse <- TreeSummarizedExperiment(
+          assays = assays,
+          colData = smd)
+        ancombc_out <- ancombc2(both_tse, fix_formula = fix_formula,
+                                rand_formula = random_formula, p_adj_method = "BH", 
+                                alpha = 0.1, prv_cut = 0)
+        return(ancombc_out)
         }, error = function(err) {
           return(NULL)
         })
@@ -219,13 +223,6 @@ if (!outputs_already_exist){
       glm.test$metric <- gsub("_.*", "", glm.test$variable)
       glm.test$variable <- gsub("^[^_]*_|^passed_ss_", "", glm.test$variable)
       glm.test <- reshape2::dcast(formula = taxon + variable ~ metric, glm.test)
-      
-      struc_zeros <- ancombc_out$zero_ind[ancombc_out$zero_ind[,2] != ancombc_out$zero_ind[,3],]
-      glm.test <- rbind(glm.test, data.frame(taxon = struc_zeros$taxon,
-                                             variable = binary_cols[1],
-                                             lfc = ifelse(struc_zeros[,3] == F, Inf, -Inf),
-                                             p = 0,
-                                             passed = 1))
       
       outputs <- data.frame(taxon = glm.test$taxon,
                             metadata = glm.test$variable,

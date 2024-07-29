@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 package_vec = c("reshape2", "ggplot2", "optparse", 
-                "parallel", "stringi", "doParallel", "plyr", "tidyr", 'dplyr', 'vegan')
+                "parallel", "stringi", "doParallel", "plyr", "tidyr", 'dplyr', 'vegan', 'maaslin3')
 invisible(suppressPackageStartupMessages(lapply(package_vec, require, character.only = TRUE)))
 
 # Command Line Usage
@@ -20,7 +20,7 @@ option_list = list(
 opt <- parse_args(OptionParser(option_list=option_list), positional_arguments = TRUE)
 workingDirectory <- opt$options$workingDirectory
 analysisDirectory <- opt$options$analysisDirectory
-nCores<- opt$options$nCores
+nCores <- opt$options$nCores
 
 taxa_table <- read.csv('data/metaphlan4_taxonomic_profiles.tsv', skip = 1, check.names = F, sep = '\t')
 
@@ -55,7 +55,7 @@ prepare_metadata <- function(dataset_type) {
   metadata <- metadata[,colSums(metadata == '', na.rm = T) != nrow(metadata)]
   keep_cols <- c('External ID', 'Participant ID', 'week_num', 'site_name', 'Age at diagnosis',
                  'Education Level', 'Occupation', 'consent_age', 'diagnosis',
-                 colnames(metadata)[c(52:83, 85:111)], 'race', 'sex', 'BMI')
+                 colnames(metadata)[c(52:83, 85:111)], 'race', 'sex', 'BMI', 'reads_filtered')
   metadata <- metadata[,keep_cols]
   metadata <- metadata[,colSums(!is.na(metadata)) != 0]
   return(metadata)
@@ -86,17 +86,10 @@ metadata$dysbiosis_state <- factor(metadata$dysbiosis_state, levels = c('none', 
 
 dysbiosis_df <- metadata[, c("sample", "dysbiosis_state")]
 dysbiosis_df <- dysbiosis_df[order(dysbiosis_df$sample),]
-dysbiosis_df$sample <- gsub('_P$', '', dysbiosis_df$sample)
 dysbiosis_df <- dysbiosis_df[!duplicated(dysbiosis_df$sample),]
 
 metadata <- prepare_metadata(opt$options$dataset)
 metadata <- right_join(dysbiosis_df, metadata, by=c('sample'='External ID'))
-
-# Run Maaslin 3
-Maaslin3_path <- paste0(gsub("/$", "", workingDirectory), "/Maaslin3/R/")
-for (R_file in dir(Maaslin3_path, pattern = "*.R$")) {
-  source(file.path(Maaslin3_path, R_file))
-}
 
 metadata$participant_id <- metadata$`Participant ID`
 metadata$diagnosis <- factor(metadata$diagnosis, levels = c('nonIBD', 'UC', 'CD'))
@@ -117,11 +110,6 @@ if (opt$options$dataset == 'taxa') {
   taxa_table$clade_name <- NULL
   
 } else {
-  Maaslin3_path <- paste0(gsub("/$", "", workingDirectory), "/Maaslin3/R/")
-  for (R_file in dir(Maaslin3_path, pattern = "*.R$")) {
-    source(file.path(Maaslin3_path, R_file))
-  }
-  
   # Read in data
   mbx_table <- read.csv("data/intensities_hmp2.csv")
   annotations <- read.csv("data/annotations_hmp2.csv")
@@ -136,35 +124,53 @@ if (opt$options$dataset == 'taxa') {
   taxa_table <- mbx_table
 }
 
+metadata <- metadata[metadata$sample %in% colnames(taxa_table),]
+metadata <- metadata[as.numeric(mapvalues(metadata$sample, colnames(taxa_table), 1:ncol(taxa_table))),]
+
+
 if (opt$options$dataset == 'taxa') {
-  tmp_fit_out <- paste0(gsub("/$", "", analysisDirectory), "/tmp_fit_out_Maaslin3")
+  tmp_fit_out <- paste0(gsub("/$", "", analysisDirectory), "/fit_out_Maaslin3")
 } else {
-  tmp_fit_out <- paste0(gsub("/$", "", analysisDirectory), "/tmp_fit_out_Maaslin3_mbx")
+  tmp_fit_out <- paste0(gsub("/$", "", analysisDirectory), "/fit_out_Maaslin3_mbx")
 }
 
 if (opt$options$dataset == 'taxa') {
-  param_list <- list(input_data = taxa_table, input_metadata = metadata, min_abundance = 0, min_prevalence = 0, output = tmp_fit_out, 
-                     min_variance = 0, normalization = 'TSS', transform = 'LOG', analysis_method = 'LM', 
-                     formula = '~ diagnosis + dysbiosis_state + Antibiotics + consent_age + (1 | participant_id)', 
-                     save_scatter = FALSE, 
-                     save_models = F, plot_heatmap = F, plot_scatter = F, max_significance = 0.1, augment = F, iterative_mode = F, cores=nCores)
+  param_list <- list(input_data = taxa_table,
+                     input_metadata = metadata, 
+                     output = tmp_fit_out, 
+                     normalization = 'TSS', 
+                     transform = 'LOG', 
+                     formula = '~ diagnosis + dysbiosis_state + Antibiotics + consent_age + reads_filtered + (1 | participant_id)', 
+                     plot_summary_plot = T, 
+                     plot_associations = T, 
+                     max_significance = 0.1, 
+                     augment = T, 
+                     median_comparison_abundance = T, 
+                     median_comparison_prevalence = F, 
+                     cores=nCores)
 } else {
-  param_list <- list(input_data = taxa_table, input_metadata = metadata, min_abundance = 0, min_prevalence = 0, output = tmp_fit_out, 
-                     min_variance = 0, normalization = 'NONE', transform = 'LOG', analysis_method = 'LM', 
+  param_list <- list(input_data = taxa_table, 
+                     input_metadata = metadata, 
+                     output = tmp_fit_out, 
+                     normalization = 'NONE', 
+                     transform = 'LOG', 
                      formula = '~ diagnosis + dysbiosis_state + Antibiotics + consent_age + (1 | participant_id)', 
-                     save_scatter = FALSE, 
-                     save_models = F, plot_heatmap = F, plot_scatter = F, max_significance = 0.1, augment = T, iterative_mode = F, cores=nCores)
+                     plot_summary_plot = T, 
+                     plot_associations = T, 
+                     max_significance = 0.1, 
+                     augment = T, 
+                     median_comparison_abundance = F, 
+                     median_comparison_prevalence = F, 
+                     cores=nCores)
 }
-fit_out <- Maaslin3(param_list)
+fit_out <- maaslin3::maaslin3(param_list)
 
-unlink(tmp_fit_out, recursive = T)
-
-fit_out_lm <- fit_out$fit_data_non_zero$results
-fit_out_lm <- fit_out_lm[c("feature", "metadata", "value", "coef", "pval_single", "error", "qval_single", "pval_joint", "qval_joint")]
+fit_out_lm <- fit_out$fit_data_abundance$results
+fit_out_lm <- fit_out_lm[c("feature", "metadata", "value", "coef", "pval_individual", "error", "qval_individual", "pval_joint", "qval_joint", "N", "N.not.zero")]
 fit_out_lm$association <- "abundance"
 
-fit_out_binary <- fit_out$fit_data_binary$results
-fit_out_binary <- fit_out_binary[c("feature", "metadata", "value", "coef", "pval_single", "error", "qval_single", "pval_joint", "qval_joint")]
+fit_out_binary <- fit_out$fit_data_prevalence$results
+fit_out_binary <- fit_out_binary[c("feature", "metadata", "value", "coef", "pval_individual", "error", "qval_individual", "pval_joint", "qval_joint", "N", "N.not.zero")]
 fit_out_binary$association <- "prevalence"
 
 fit_out_joint <- full_join(fit_out_lm, fit_out_binary, by = colnames(fit_out_lm))

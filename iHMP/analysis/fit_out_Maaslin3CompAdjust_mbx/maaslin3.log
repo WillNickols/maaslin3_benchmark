@@ -1,0 +1,98 @@
+2024-07-02 20:20:30.601038 INFO::Writing function arguments to log file
+2024-07-02 20:20:30.609885 DEBUG::Function arguments
+2024-07-02 20:20:30.61615 DEBUG::Output folder: /n/holystore01/LABS/huttenhower_lab/Users/wnickols/maaslin3/maaslin3_benchmark/HMP2/analysis/fit_out_Maaslin3CompAdjust_mbx
+2024-07-02 20:20:30.61708 DEBUG::Min Abundance: 0.000000
+2024-07-02 20:20:30.617876 DEBUG::Zero Threshold: 0.000000
+2024-07-02 20:20:30.618633 DEBUG::Min Prevalence: 0.000000
+2024-07-02 20:20:30.619371 DEBUG::Normalization: NONE
+2024-07-02 20:20:30.620147 DEBUG::Transform: LOG
+2024-07-02 20:20:30.620912 DEBUG::Max significance: 0.100000
+2024-07-02 20:20:30.621713 DEBUG::Random effects:
+2024-07-02 20:20:30.622484 DEBUG::Fixed effects:
+2024-07-02 20:20:30.623244 DEBUG::Group effects:
+2024-07-02 20:20:30.624099 DEBUG::Ordered effects:
+2024-07-02 20:20:30.624876 DEBUG::Formula: ~ diagnosis + dysbiosis_state + Antibiotics + consent_age + (1 | participant_id)
+2024-07-02 20:20:30.625612 DEBUG::Correction method: BH
+2024-07-02 20:20:30.626357 DEBUG::Standardize: TRUE
+2024-07-02 20:20:30.627071 DEBUG::Augment: TRUE
+2024-07-02 20:20:30.627808 DEBUG::Cores: 24
+2024-07-02 20:20:30.628559 DEBUG::Abundance median comparison: TRUE
+2024-07-02 20:20:30.6293 DEBUG::Prevalence median comparison: FALSE
+2024-07-02 20:20:30.630054 DEBUG::Abundance median comparison threshold: 0.25
+2024-07-02 20:20:30.630788 DEBUG::Prevalence median comparison threshold: 0.25
+2024-07-02 20:20:30.631796 INFO::Verifying options selected are valid
+2024-07-02 20:20:30.683562 INFO::Determining format of input files
+2024-07-02 20:20:30.685379 INFO::Input format is data samples as columns and metadata samples as rows
+2024-07-02 20:20:30.693439 DEBUG::Transformed data so samples are rows
+2024-07-02 20:20:30.695491 DEBUG::The following samples were found to have features but no metadata. They will be removed. HSM5FZBJ,MSM5FZ9X,CSM5FZ3N,ESM5MEDZ,MSM5FZA2,MSM5LLHZ,HSM5FZBQ,MSM5LLIC,MSM5LLIG,CSM5FZ3T,MSM5LLFG,MSM5LLFK,ESM5MEEG,MSM5LLIS,CSM5FZ48,CSM5FZ4C,CSM5FZ4A,HSM5MD4S,CSM5FZ4O,MSM5LLIK,CSM5MCTZ,MSM5LLFO,HSM5MD86,HSM5MD7W,ESM5MEEB,MSM5LLGH,ESM5GEZ6,MSM5LLGR,HSM5MD7Z,HSM5MD4W,MSM5LLHQ,HSM5MD8A,CSM5FZ44,MSM5LLEH,HSM5MD82,CSM5FZ4K,CSM5MCUU,CSM5MCU4,HSM5MD5K,MSM5LLH8,HSM5MD87,CSM5MCVH,MSM5LLHM,CSM5MCUC,CSM5MCVV,HSM5MD4Q,HSM5MD4A,HSM5MD51,MSM5LLEN,MSM6J2H9,CSM5MCUM,HSM5MD3L,CSM5MCWK,HSM5MD8H,MSM6J2JF,HSM5MD5D,ESM5MEDN,HSM5MD8B,CSM5MCW4,CSM5MCVN,HSM5MD4O,ESM5MEBU,HSM5MD43,CSM5MCXF,MSM6J2JH,MSM6J2IG,CSM5MCXB,MSM6J2J5,HSM5MD5Z,CSM5MCXL,CSM5MCWE,HSM5MD7H,CSM5MCY8,CSM5MCYU,ESM5MEB9,CSM5MCYK,HSM6XRQC,CSM5MCX3,CSM5MCXZ,HSM6XRQE,CSM67U9T,CSM67U9V,CSM67U9X,CSM67UA2,MSM6J2HT,HSM5MD73,ESM5MEDD,CSM5MCZF,CSM5MCYO,PSM6XBQM,HSM6XRSZ,HSM6XRTC,HSM5MD41,CSM5MCZ3,HSM67VDX,CSM67UAA,CSM67UBH,HSM5MD6U,CSM67U9P,CSM67UBZ,MSM6J2Q1,HSM6XRQW,HSM67VDR,MSM6J2PE,CSM67UCK,HSM6XRRJ,CSM67UH7,CSM67UAQ,CSM67UB1,CSM67UDN,CSM67UFZ,CSM79HG4,CSM67UBB,CSM67UEA,CSM67UEW,CSM67UBN,CSM79HGP,CSM79HHO,HSM67VD6,ESM5MECL,CSM67UGO,HSM67VF3,PSM6XBS6,CSM79HJM,CSM79HGH,CSM79HJE,MSM6J2NA,MSM6J2QZ,HSM67VHU,CSM79HLA,CSM79HH8,PSM6XBT3,CSM79HJ6,CSM79HIT,HSM67VEA,MSM79H52,CSM79HJI,CSM67UEI,CSM79HJG,ESM718SY,CSM79HLM,HSM67VG6,CSM79HIJ,CSM79HMN,CSM79HMZ,CSM79HI7,CSM79HKB,HSM67VHM,CSM79HKR,CSM79HGZ,PSM6XBSK,CSM79HKZ,CSM79HJS,HSM7CZ1T,CSM79HK1,CSM79HOJ,PSM6XBTF,CSM79HPA,CSM79HIB,CSM79HN6,PSM6XBUG,HSM7J4Q3,CSM79HPS,HSM7J4QB,HSM6XRVW,CSM79HP4,CSM7KOLK,CSM79HRG,PSM7J1CK,MSM79HC8,HSM7CZ2P,CSM7KOKN,PSM7J1BN,CSM7KOKB,HSM7CYYZ,PSM7J19J,CSM79HR6,CSM7KOLA,CSM7KONS,CSM79HQL,CSM7KOLY,CSM7KOMB,CSM7KONC,CSM7KOJO,ESM9IEP5,HSM7J4LD,MSM79HD6,CSM7KOOH,PSM7J19V,CSM7KOKZ,CSM79HQR,HSM7J4M4,CSM7KOLE,PSM7J1DH,CSM7KOQZ,MSM79HAH,MSM79H6Y,PSM7J188,MSM79H7Q,CSM7KON8,MSM9VZFJ,CSM7KOPC,HSM7J4JT,HSM7J4QT,HSM7J4MY,HSM7J4L9,MSM9VZEK,CSM79HQN,MSM79H94,HSM7J4KC,CSM7KOQ1,CSM7KOQ7,HSM7J4ME,CSM7KOPQ,CSM7KOQ3,CSM7KOR8,HSM7J4JV,MSM9VZM4,HSM7J4OZ,MSM79H8J,CSM7KOU9,CSM7KORK,PSM7J14L,MSM9VZES,HSM7J4JW,PSM7J141,CSM9X1XW,PSM7J134,CSM7KOUF,CSM7KOTK,CSM7KOOF,PSMA2651,MSM9VZPV,MSM9VZLV,CSM7KOUR,HSMA33NY,HSMA33NG,HSMA33O5,MSM9VZOO,CSM9X1YV,PSMA265X,CSM9X21B,PSM7J167,HSMA33K2,HSMA33JP,PSMA266I,HSMA33J5,HSMA33LL,MSM9VZHX,MSM9VZIQ,PSMA265T,MSM9VZHF,HSMA33JH,PSMA265H,PSMA267J,PSMA266C,PSMA2646,CSM9X21J,MSM9VZH1,CSM9X22G,PSMA267B,HSMA33LV,CSM9X21P,PSMA269I,HSMA33PP,HSMA33PZ,HSMA33IY,CSM9X22Q,MSMAPC7J,CSM9X22U,MSMAPC5F,MSMAPC62,PSMA269E,PSMA26AJ,CSM9X237,HSMA33Q6,HSMA33M8,CSM9X23L,PSMB4MBQ,MSMAPC5D,CSM9X23P,MSMAPC7D,MSMB4LYH,HSMA33RL
+2024-07-02 20:20:30.69654 DEBUG::The following samples were found to have metadata but no features. They will be removed. NA,NA.1,NA.2,NA.3,NA.4,NA.5,NA.6,NA.7,NA.8,NA.9,NA.10,NA.11,NA.12,NA.13,NA.14,NA.15,NA.16,NA.17,NA.18,NA.19,NA.20,NA.21,NA.22,NA.23,NA.24,NA.25,NA.26,NA.27,NA.28,NA.29,NA.30,NA.31,NA.32,NA.33,NA.34,NA.35,NA.36,NA.37,NA.38,NA.39,NA.40,NA.41,NA.42,NA.43,NA.44,NA.45,NA.46,NA.47,NA.48,NA.49,NA.50,NA.51,NA.52,NA.53,NA.54,NA.55,NA.56,NA.57,NA.58,NA.59,NA.60,NA.61,NA.62,NA.63,NA.64,NA.65,NA.66,NA.67,NA.68,NA.69,NA.70,NA.71,NA.72,NA.73,NA.74,NA.75,NA.76,NA.77,NA.78,NA.79,NA.80,NA.81,NA.82,NA.83,NA.84,NA.85,NA.86,NA.87,NA.88,NA.89,NA.90,NA.91,NA.92,NA.93,NA.94,NA.95,NA.96,NA.97,NA.98,NA.99,NA.100,NA.101,NA.102,NA.103,NA.104,NA.105,NA.106,NA.107,NA.108,NA.109,NA.110,NA.111,NA.112,NA.113,NA.114,NA.115,NA.116,NA.117,NA.118,NA.119,NA.120,NA.121,NA.122,NA.123,NA.124,NA.125
+2024-07-02 20:20:30.697474 DEBUG::A total of 262 samples were found in both the data and metadata
+2024-07-02 20:20:30.698235 DEBUG::Reordering data/metadata to use same sample ordering
+2024-07-02 20:20:30.70342 INFO::Formula for random effects: expr ~ diagnosis + dysbiosis_state + Antibiotics + consent_age + (1 | participant_id)
+2024-07-02 20:20:30.705445 INFO::Filter data based on min abundance and min prevalence
+2024-07-02 20:20:30.706678 INFO::Total samples in data: 262
+2024-07-02 20:20:30.707752 INFO::Min samples required with min abundance for a feature not to be filtered: 0.000000
+2024-07-02 20:20:30.743535 INFO::Total filtered features: 0
+2024-07-02 20:20:30.745476 INFO::Filtered feature names from abundance and prevalence filtering:
+2024-07-02 20:20:30.755179 INFO::Total filtered features with variance filtering: 0
+2024-07-02 20:20:30.756713 INFO::Filtered feature names from variance filtering:
+2024-07-02 20:20:30.7586 INFO::Writing filtered data to file /n/holystore01/LABS/huttenhower_lab/Users/wnickols/maaslin3/maaslin3_benchmark/HMP2/analysis/fit_out_Maaslin3CompAdjust_mbx/features/filtered_data.tsv
+2024-07-02 20:20:30.907873 INFO::Applying z-score to standardize continuous metadata
+2024-07-02 20:20:30.922784 INFO::Running selected normalization method: NONE
+2024-07-02 20:20:30.934287 INFO::Writing filtered, normalized data to file /n/holystore01/LABS/huttenhower_lab/Users/wnickols/maaslin3/maaslin3_benchmark/HMP2/analysis/fit_out_Maaslin3CompAdjust_mbx/features/filtered_data_norm.tsv
+2024-07-02 20:20:31.050581 INFO::Running selected transform method: LOG
+2024-07-02 20:20:31.064641 INFO::Writing filtered, normalized, transformed data to file /n/holystore01/LABS/huttenhower_lab/Users/wnickols/maaslin3/maaslin3_benchmark/HMP2/analysis/fit_out_Maaslin3CompAdjust_mbx/features/filtered_data_norm_transformed.tsv
+2024-07-02 20:20:31.195017 INFO::Running the linear model (LM) component
+2024-07-02 20:20:31.483746 INFO::Creating cluster of 24 R processes
+2024-07-02 20:20:46.284638 INFO::Performing tests against medians
+2024-07-02 20:20:50.384795 INFO::Counting total values for each feature
+2024-07-02 20:20:50.460826 INFO::Running the logistic model component
+2024-07-02 20:20:50.463576 INFO::Creating cluster of 24 R processes
+2024-07-02 20:21:50.700695 INFO::Counting total values for each feature
+2024-07-02 20:21:50.847371 INFO::Writing residuals to file /n/holystore01/LABS/huttenhower_lab/Users/wnickols/maaslin3/maaslin3_benchmark/HMP2/analysis/fit_out_Maaslin3CompAdjust_mbx/fits/residuals_LM.rds
+2024-07-02 20:21:50.920358 INFO::Writing fitted values to file /n/holystore01/LABS/huttenhower_lab/Users/wnickols/maaslin3/maaslin3_benchmark/HMP2/analysis/fit_out_Maaslin3CompAdjust_mbx/fits/fitted_LM.rds
+2024-07-02 20:21:50.971661 INFO::Writing residuals to file /n/holystore01/LABS/huttenhower_lab/Users/wnickols/maaslin3/maaslin3_benchmark/HMP2/analysis/fit_out_Maaslin3CompAdjust_mbx/fits/residuals_logistic.rds
+2024-07-02 20:21:51.06514 INFO::Writing fitted values to file /n/holystore01/LABS/huttenhower_lab/Users/wnickols/maaslin3/maaslin3_benchmark/HMP2/analysis/fit_out_Maaslin3CompAdjust_mbx/fits/fitted_logistic.rds
+2024-07-02 20:21:51.217303 INFO::Writing all the results to file (ordered by increasing joint q-values): /n/holystore01/LABS/huttenhower_lab/Users/wnickols/maaslin3/maaslin3_benchmark/HMP2/analysis/fit_out_Maaslin3CompAdjust_mbx/all_results.tsv
+2024-07-02 20:21:51.259633 INFO::Writing the significant results without errors (those which are less than or equal to the threshold of 0.100000 ) to file (ordered by increasing joint q-values): /n/holystore01/LABS/huttenhower_lab/Users/wnickols/maaslin3/maaslin3_benchmark/HMP2/analysis/fit_out_Maaslin3CompAdjust_mbx/significant_results.tsv
+2024-07-02 20:21:51.268605 INFO::Creating output figures folder
+2024-07-02 20:21:51.275292 INFO::Writing summary plot of significant results to file: /n/holystore01/LABS/huttenhower_lab/Users/wnickols/maaslin3/maaslin3_benchmark/HMP2/analysis/fit_out_Maaslin3CompAdjust_mbx/figures/summary_plot.pdf
+2024-07-02 20:21:53.858987 INFO::Writing association plots (one for each significant association) to output folder: /n/holystore01/LABS/huttenhower_lab/Users/wnickols/maaslin3/maaslin3_benchmark/HMP2/analysis/fit_out_Maaslin3CompAdjust_mbx/figures
+2024-07-02 20:21:53.862871 INFO::Plotting associations from most to least significant, grouped by metadata
+2024-07-02 20:21:53.868702 INFO::Creating tile plot for categorical data (logistic), Antibiotics vs C16.1.LPC_HMDB10383._HILIC.pos
+2024-07-02 20:21:53.899803 INFO::Creating box plot for categorical data (linear), dysbiosis_state vs C16.1.LPC_HMDB10383._HILIC.pos
+2024-07-02 20:21:53.921069 INFO::Creating tile plot for categorical data (logistic), dysbiosis_state vs C16.1.LPC_HMDB10383._HILIC.pos
+2024-07-02 20:21:53.949677 INFO::Creating tile plot for categorical data (logistic), diagnosis vs C18.0.LPE.A_HMDB11130._HILIC.pos
+2024-07-02 20:21:53.977921 INFO::Creating tile plot for categorical data (logistic), Antibiotics vs C24.1.SM_HMDB12107._C8.pos
+2024-07-02 20:21:54.006366 INFO::Creating box plot for categorical data (linear), diagnosis vs C24.1.SM_HMDB12107._C8.pos
+2024-07-02 20:21:54.027266 INFO::Creating tile plot for categorical data (logistic), diagnosis vs C24.1.SM_HMDB12107._C8.pos
+2024-07-02 20:21:54.05963 INFO::Creating tile plot for categorical data (logistic), diagnosis vs N.acetylhistamine_HMDB13253_HILIC.pos
+2024-07-02 20:21:54.088213 INFO::Creating tile plot for categorical data (logistic), Antibiotics vs porphobilinogen_HMDB00245_C18.neg
+2024-07-02 20:21:54.116869 INFO::Creating tile plot for categorical data (logistic), diagnosis vs X3..O.methyladenosine_HMDB06023_HILIC.pos
+2024-07-02 20:21:54.145372 INFO::Creating tile plot for categorical data (logistic), Antibiotics vs C24.0.SM_HMDB11697_C8.pos
+2024-07-02 20:21:54.1737 INFO::Creating box plot for categorical data (linear), diagnosis vs C24.0.SM_HMDB11697_C8.pos
+2024-07-02 20:21:54.191445 INFO::Creating tile plot for categorical data (logistic), diagnosis vs C24.0.SM_HMDB11697_C8.pos
+2024-07-02 20:21:54.21794 INFO::Creating tile plot for categorical data (logistic), dysbiosis_state vs C20.0.SM_HMDB12102_C8.pos
+2024-07-02 20:21:54.244035 INFO::Creating tile plot for categorical data (logistic), diagnosis vs C16.1.LPC.plasmalogen_HMDB10407._HILIC.pos
+2024-07-02 20:21:54.270198 INFO::Creating box plot for categorical data (linear), Antibiotics vs N.acetylhistamine_HMDB13253_HILIC.pos
+2024-07-02 20:21:54.288198 INFO::Creating tile plot for categorical data (logistic), Antibiotics vs N.acetylhistamine_HMDB13253_HILIC.pos
+2024-07-02 20:21:54.348707 INFO::Creating tile plot for categorical data (logistic), Antibiotics vs C18.0.LPE.A_HMDB11130._HILIC.pos
+2024-07-02 20:21:54.373805 INFO::Creating tile plot for categorical data (logistic), Antibiotics vs hippurate_HMDB00714_HILIC.pos
+2024-07-02 20:21:54.399021 INFO::Creating box plot for categorical data (linear), dysbiosis_state vs porphobilinogen_HMDB00245_C18.neg
+2024-07-02 20:21:54.415095 INFO::Creating tile plot for categorical data (logistic), dysbiosis_state vs porphobilinogen_HMDB00245_C18.neg
+2024-07-02 20:21:54.440087 INFO::Creating tile plot for categorical data (logistic), Antibiotics vs C16.1.LPC.plasmalogen_HMDB10407._HILIC.pos
+2024-07-02 20:21:54.465203 INFO::Creating box plot for categorical data (linear), diagnosis vs porphobilinogen_HMDB00245_C18.neg
+2024-07-02 20:21:54.481308 INFO::Creating tile plot for categorical data (logistic), diagnosis vs porphobilinogen_HMDB00245_C18.neg
+2024-07-02 20:21:54.506429 INFO::Creating tile plot for categorical data (logistic), dysbiosis_state vs C20.4.LPC_HMDB10395_C8.pos
+2024-07-02 20:21:54.538611 INFO::Creating tile plot for categorical data (logistic), dysbiosis_state vs C24.1.SM_HMDB12107._C8.pos
+2024-07-02 20:21:54.566634 INFO::Creating boxplot for continuous data (logistic), consent_age vs X3..O.methyladenosine_HMDB06023_HILIC.pos
+2024-07-02 20:21:54.586381 INFO::Creating tile plot for categorical data (logistic), Antibiotics vs C20.4.LPC_HMDB10395_C8.pos
+2024-07-02 20:21:54.614719 INFO::Creating tile plot for categorical data (logistic), diagnosis vs N1.N12.diacetylspermine_HMDB02172_HILIC.pos
+2024-07-02 20:21:54.64395 INFO::Creating tile plot for categorical data (logistic), dysbiosis_state vs X5.hydroxytryptophan_HMDB00472_HILIC.pos
+2024-07-02 20:21:54.671863 INFO::Creating tile plot for categorical data (logistic), Antibiotics vs X5.hydroxytryptophan_HMDB00472_HILIC.pos
+2024-07-02 20:21:54.698382 INFO::Creating tile plot for categorical data (logistic), diagnosis vs cytidine_HMDB00089_HILIC.pos
+2024-07-02 20:21:54.723547 INFO::Creating boxplot for continuous data (logistic), consent_age vs C24.1.SM_HMDB12107._C8.pos
+2024-07-02 20:21:54.74248 INFO::Creating tile plot for categorical data (logistic), Antibiotics vs cytidine_HMDB00089_HILIC.pos
+2024-07-02 20:21:54.767569 INFO::Creating box plot for categorical data (linear), Antibiotics vs C22.5.CE_HMDB10375._C8.pos
+2024-07-02 20:21:54.783568 INFO::Creating tile plot for categorical data (logistic), Antibiotics vs C22.5.CE_HMDB10375._C8.pos
+2024-07-02 20:21:54.808474 INFO::Creating boxplot for continuous data (logistic), consent_age vs C16.1.LPC_HMDB10383._HILIC.pos

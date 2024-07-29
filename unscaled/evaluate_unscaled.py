@@ -3,7 +3,7 @@ import os
 import itertools
 import copy
 
-workflow = Workflow(version="0.1", description="MPA 4 workflow")
+workflow = Workflow(version="0.1", description="Evaluate unscaled")
 workflow.add_argument("cores", desc="The number of CPU cores allocated to the job", type=int, default=4)
 workflow.add_argument("mem", desc="The memory in megabytes allocated to run the command", type=int, default=10000)
 workflow.add_argument("time", desc="The time in minutes allocated to run the command", type=int, default=120)
@@ -11,14 +11,6 @@ workflow.add_argument('parameters', type=str, desc="Specify the parameters")
 workflow.add_argument('tmp', desc="Whether to use reduced parameters", action="store_true")
 args = workflow.parse_args()
 this_directory = str(os.path.dirname(os.path.realpath(__file__))).rstrip('/') + '/'
-
-# This workflow should:
-# Create everything on the benchmark options spreadsheet
-# Run the three methods on each
-# Run the analysis scripts on those results
-# 
-# Can run multiple simulation parameters on multiple cores (yes) and can run multiple iterations of a single simulation on multiple cores (no)
-# Can run multiple simulation types or evaluations with this script
 
 # output, set this to the GitHub repository
 output = os.path.abspath(args.output.rstrip("unscaled/")) + "/"

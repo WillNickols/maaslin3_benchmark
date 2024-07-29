@@ -3,7 +3,7 @@ import os
 import itertools
 import copy
 
-workflow = Workflow(version="0.1", description="MPA 4 workflow")
+workflow = Workflow(version="0.1", description="Get IBD associations")
 workflow.add_argument("cores", desc="The number of CPU cores allocated to the job", type=int, default=4)
 workflow.add_argument("mem", desc="The memory in megabytes allocated to run the command", type=int, default=10000)
 workflow.add_argument("time", desc="The time in minutes allocated to run the command", type=int, default=120)

@@ -137,11 +137,24 @@ if (!outputs_already_exist){
     abundance <- read.csv(paste0(this_params_folder, "/abundance_", i, ".tsv"), sep = "\t")
     truth <- read.csv(paste0(this_params_folder, "/truth_", i, ".tsv"), sep = "\t")
     
-    for (col in names(metadata)[names(metadata) != "ID"]) {
-      if (all(metadata[[col]] %in% c(0, 1))) {
-        metadata[[col]] <- as.character(metadata[[col]])
-      } else {
-        metadata[[col]] <- as.numeric(metadata[[col]])
+    # Remove spike-in
+    abundance <- abundance[1:(nrow(abundance) - 1),]
+    
+    # Get read depths
+    abundance <- abundance[apply(abundance, 1, var) != 0,]
+    read_depths <- data.frame(sample = names(colSums(abundance)),
+                              read_depth = colSums(abundance))
+    metadata$sample <- rownames(metadata)
+    metadata <- left_join(metadata, read_depths, by = 'sample')
+    rownames(metadata) <- metadata$sample
+    metadata$sample <- NULL
+    
+    # Don't convert to relative abundance - ALDEx needs raw reads
+    # abundance <- t(t(abundance) / colSums(abundance))
+    
+    for (column in colnames(metadata)) {
+      if (length(unique(metadata[,column])) == 2) {
+        metadata[,column] <- as.factor(metadata[,column])
       }
     }
     
@@ -152,19 +165,12 @@ if (!outputs_already_exist){
     }
     
     sink('/dev/null')
-    if ('ID' %in% colnames(metadata)) {
-      if (length(unique(metadata$ID)) == length(metadata$ID)) { # No random effect
-        mm <- model.matrix(formula(paste0("~ ", 
-                                          paste0(colnames(metadata)[colnames(metadata) != "ID"], 
-                                                 collapse = " + "), 
-                                          collapse = "")),metadata)
-      } else { # Random effect
-        mm <- model.matrix(formula(paste0("~ ", 
-                                          paste0(colnames(metadata), 
-                                                 collapse = " + "), 
-                                          collapse = "")),metadata)
-      }
-    } else { # No random effect
+    if ('ID' %in% colnames(metadata) & length(unique(metadata$ID)) != length(metadata$ID)) {
+      mm <- model.matrix(formula(paste0("~ ", 
+                                        paste0(colnames(metadata), 
+                                               collapse = " + "), 
+                                        collapse = "")),metadata)
+    } else {
       mm <- model.matrix(formula(paste0("~ ", 
                                         paste0(colnames(metadata)[colnames(metadata) != "ID"], 
                                                collapse = " + "), 

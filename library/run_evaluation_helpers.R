@@ -5,7 +5,7 @@ prepare_truth <- function(truth, generator) {
   if (generator == 'SD2') {
     outputs <- data.frame(taxon = truth$feature_spiked,
                           metadata = truth$metadata_datum,
-                          effect_size = truth$effect_size,
+                          effect_size = truth$effect_size / ifelse(truth$associated_property == 'abundance', log(2), 1), # SD2 is on exp rather than base 2
                           associations = truth$associated_property)
     return(outputs)
   }
@@ -33,10 +33,11 @@ prepare_truth_groups <- function(truth, generator) {
     truth <- truth[grepl('[0-9]', substr(truth$metadata_datum, nchar(truth$metadata_datum), nchar(truth$metadata_datum))),]
     outputs <- data.frame(taxon = truth$feature_spiked,
                           metadata = truth$metadata_datum,
-                          effect_size = truth$effect_size,
+                          effect_size = truth$effect_size / ifelse(truth$associated_property == 'abundance', log(2), 1),
                           associations = truth$associated_property,
                           org_metadata = truth$metadata_datum)
     outputs$metadata <- gsub('[0-9]', '', outputs$metadata)
+    outputs <- outputs[outputs$effect_size != 0,]
     outputs <- unique(outputs)
     return(outputs)
   }
@@ -44,13 +45,11 @@ prepare_truth_groups <- function(truth, generator) {
 
 allowed_errors <- c(NA)
 
-prepare_associations_general <- function(associations, tool, generator = 'SD2') {
+prepare_associations_general <- function(associations, tool, generator = 'SD2', threshold = -1) {
   if (tool %in% c('ALDEx2', 'ANCOMBC')) {
     if (tool == 'ANCOMBC') {
       associations <- associations[is.na(associations$error),]
-      if (generator != 'ANCOM_BC_generator') {
-        associations <- associations[associations$associations != 'prevalence',]
-      }
+      associations$effect_size <- associations$effect_size / log(2) # Inflate because transformation is originally base e
     }
     if (generator == 'SimSeq' | generator == 'ANCOM_BC_generator') {
       outputs <- data.frame(taxon = associations$taxon,
@@ -67,14 +66,16 @@ prepare_associations_general <- function(associations, tool, generator = 'SD2') 
       outputs <- data.frame(matrix(nrow = 0, ncol = 4))
       colnames(outputs) <- c("taxon", "metadata", "effect_size", "signif")
     }
-    return(outputs[rowSums(is.na(outputs)) == 0,])
+    return(outputs[rowSums(is.na(outputs)) == 0 & outputs$metadata != 'read_depth' & 
+                     abs(outputs$effect_size) > threshold,])
   }
   if (tool %in% c('Maaslin2')) {
     outputs <- data.frame(taxon = associations$taxon,
                           metadata = associations$metadata,
                           effect_size = associations$effect_size,
                           signif = associations$qval)
-    return(outputs[rowSums(is.na(outputs)) == 0,])
+    return(outputs[rowSums(is.na(outputs)) == 0 & outputs$metadata != 'read_depth' & 
+                     abs(outputs$effect_size) > threshold,])
   }
   if (grepl('Maaslin3', tool)) {
     associations <- associations[associations$error %in% allowed_errors,]
@@ -82,11 +83,12 @@ prepare_associations_general <- function(associations, tool, generator = 'SD2') 
                           metadata = associations$metadata,
                           effect_size = associations$effect_size,
                           signif = associations$qval_joint)
-    return(outputs[rowSums(is.na(outputs)) == 0,])
+    return(outputs[rowSums(is.na(outputs)) == 0 & outputs$metadata != 'read_depth' & 
+                     abs(outputs$effect_size) > threshold,])
   }
 }
 
-prepare_associations_abundance <- function(associations, tool, generator = 'SD2') {
+prepare_associations_abundance <- function(associations, tool, generator = 'SD2', threshold = -1) {
   if (grepl('Maaslin3', tool)) {
     associations <- associations[associations$error %in% allowed_errors,]
     associations <- associations[associations$associations == 'abundance',]
@@ -94,7 +96,8 @@ prepare_associations_abundance <- function(associations, tool, generator = 'SD2'
                           metadata = associations$metadata,
                           effect_size = associations$effect_size,
                           signif = associations$qval)
-    return(outputs[rowSums(is.na(outputs)) == 0,])
+    return(outputs[rowSums(is.na(outputs)) == 0 & outputs$metadata != 'read_depth' & 
+                     abs(outputs$effect_size) > threshold,])
   } else if (tool == 'ANCOMBC') {
     associations <- associations[associations$associations == 'abundance',]
     return(prepare_associations_general(associations, tool, generator))
@@ -104,20 +107,19 @@ prepare_associations_abundance <- function(associations, tool, generator = 'SD2'
   }
 }
 
-prepare_associations_maaslin3 <- function(associations, tool, remove_possible_error = F) {
+prepare_associations_maaslin3 <- function(associations, tool, remove_possible_error = F, threshold = -1) {
   if (!grepl('Maaslin3', tool)) {
     stop("Only works with Maaslin3")
   }
   associations <- associations[associations$error %in% allowed_errors,]
-  if (remove_possible_error) {
-    associations <- associations[!(abs(associations$effect_size) < 0.5 & associations$pval < 10^-5),]
-  }
+  # associations <- associations[abs(associations$effect_size) > 1,]
   outputs <- data.frame(taxon = associations$taxon,
                         metadata = associations$metadata,
                         effect_size = associations$effect_size,
                         signif = associations$qval,
                         association = associations$associations)
-  return(outputs[rowSums(is.na(outputs)) == 0,])
+  return(outputs[rowSums(is.na(outputs)) == 0 & outputs$metadata != 'read_depth' & 
+                   abs(outputs$effect_size) > threshold,])
 }
 
 prepare_associations_maaslin3_group <- function(associations, tool) {
@@ -134,6 +136,9 @@ prepare_associations_maaslin3_group <- function(associations, tool) {
 }
 
 unweighted_precision_recall <- function(truth, associations, abundance, metadata, threshold = 0.1) {
+  if (nrow(associations) == 0) {
+    return(c(NA, NA))
+  }
   # all_possible_pairs <- apply(expand.grid(rownames(abundance), colnames(metadata)),
   #                             1, paste0, collapse = '_')
   truth_match_vec <- unique(paste0(truth$taxon, '_', truth$metadata))
@@ -186,6 +191,10 @@ TSSnorm = function(features) {
 }
 
 weighted_precision_recall <- function(truth, associations, abundance, metadata, threshold = 0.1, abundance_threshold = 0.001, prevalence_threshold = 0.1) {
+  if (nrow(associations) == 0) {
+    return(c(NA, NA))
+  }
+  
   abundance <- TSSnorm(abundance)
   allowed_taxa <- rownames(abundance)[rowMeans(abundance > abundance_threshold, na.rm = T) > prevalence_threshold]
   
@@ -204,6 +213,10 @@ weighted_precision_recall <- function(truth, associations, abundance, metadata, 
 
 pval_auc <- function(truth, associations, abundance, metadata) {
   if (nrow(associations) == 0) {
+    return(c(NA))
+  }
+  
+  if (nrow(associations) == 0) {
     return(NA)
   }
   truth_match_vec <- unique(paste0(truth$taxon, '_', truth$metadata))
@@ -218,6 +231,10 @@ pval_auc <- function(truth, associations, abundance, metadata) {
 }
 
 weighted_pval_auc <- function(truth, associations, abundance, metadata, abundance_threshold = 0.001, prevalence_threshold = 0.1) {
+  if (nrow(associations) == 0) {
+    return(NA)
+  }
+  
   abundance <- TSSnorm(abundance)
   allowed_taxa <- rownames(abundance)[rowMeans(abundance > abundance_threshold, na.rm = T) > prevalence_threshold]
   
@@ -239,6 +256,10 @@ weighted_pval_auc <- function(truth, associations, abundance, metadata, abundanc
 }
 
 effect_size_error <- function(truth, associations, threshold = 0.1) {
+  if (nrow(associations) == 0) {
+    return(c(NA, NA))
+  }
+  
   truth <- truth[truth$associations == 'abundance',]
   
   truth_match_vec <- unique(paste0(truth$taxon, '_', truth$metadata))
@@ -267,6 +288,12 @@ effect_size_error <- function(truth, associations, threshold = 0.1) {
 }
 
 effect_size_correlation <- function(truth, associations, threshold = 0.1) {
+  truth <- truth[truth$associations == 'abundance',]
+  
+  if (nrow(associations) == 0) {
+    return(NA)
+  }
+  
   truth_match_vec <- paste0(truth$taxon, '_', truth$metadata)
   associations_match_vec <- paste0(associations$taxon, '_', associations$metadata)
   associations_match_vec <- associations_match_vec[associations$signif < threshold]
@@ -288,10 +315,18 @@ effect_size_correlation <- function(truth, associations, threshold = 0.1) {
     return(NA)
   }
   
-  return(cor(joined_df$truth, joined_df$association, use = 'pairwise.complete.obs', method = 'spearman'))
+  joined_df = joined_df %>%
+    dplyr::group_by(metadata) %>%
+    dplyr::summarise(correlation = cor(truth, association, use = 'pairwise.complete.obs', method = 'spearman'))
+  
+  return(mean(joined_df$correlation, na.rm=T))
 }
 
 unweighted_precision_recall_maaslin3 <- function(truth, associations, abundance, metadata, threshold = 0.1) {
+  if (nrow(associations) == 0) {
+    return(c(NA, NA))
+  }
+  
   truth_match_vec <- unique(paste0(truth$taxon, '_', truth$metadata, '_', truth$associations))
   associations_match_vec <- paste0(associations$taxon, '_', associations$metadata, '_', associations$association)
   associations_match_vec <- unique(associations_match_vec[associations$signif < threshold])
@@ -303,6 +338,11 @@ unweighted_precision_recall_maaslin3 <- function(truth, associations, abundance,
 }
 
 weighted_precision_recall_maaslin3 <- function(truth, associations, abundance, metadata, threshold = 0.1, abundance_threshold = 0.001, prevalence_threshold = 0.1) {
+  if (nrow(associations) == 0) {
+    return(c(NA, NA))
+  }
+  
+  
   abundance <- TSSnorm(abundance)
   allowed_taxa <- rownames(abundance)[rowMeans(abundance > abundance_threshold, na.rm = T) > prevalence_threshold]
 
@@ -323,6 +363,10 @@ pval_auc_maaslin3 <- function(truth, associations, abundance, metadata) {
   if (nrow(associations) == 0) {
     return(NA)
   }
+  
+  if (nrow(associations) == 0) {
+    return(NA)
+  }
   truth_match_vec <- unique(paste0(truth$taxon, '_', truth$metadata, '_', truth$associations))
   associations_match_vec <- paste0(associations$taxon, '_', associations$metadata, '_', associations$association)
   associations$correct <- associations_match_vec %in% truth_match_vec
@@ -334,6 +378,10 @@ pval_auc_maaslin3 <- function(truth, associations, abundance, metadata) {
 }
 
 weighted_pval_auc_maaslin3 <- function(truth, associations, abundance, metadata, abundance_threshold = 0.001, prevalence_threshold = 0.1) {
+  if (nrow(associations) == 0) {
+    return(NA)
+  }
+  
   abundance <- TSSnorm(abundance)
   allowed_taxa <- rownames(abundance)[rowMeans(abundance > abundance_threshold, na.rm = T) > prevalence_threshold]
   
@@ -354,6 +402,10 @@ weighted_pval_auc_maaslin3 <- function(truth, associations, abundance, metadata,
 }
 
 effect_size_error_maaslin3 <- function(truth, associations, threshold = 0.1) {
+  if (nrow(associations) == 0) {
+    return(c(NA, NA))
+  }
+  
   truth_match_vec <- paste0(truth$taxon, '_', truth$metadata, '_', truth$associations)
   associations_match_vec <- paste0(associations$taxon, '_', associations$metadata, '_', associations$association)
   associations_match_vec <- associations_match_vec[associations$signif < threshold]
@@ -377,6 +429,10 @@ effect_size_error_maaslin3 <- function(truth, associations, threshold = 0.1) {
 }
 
 effect_size_correlation_maaslin3 <- function(truth, associations, threshold = 0.1) {
+  if (nrow(associations) == 0) {
+    return(NA)
+  }
+  
   truth_match_vec <- paste0(truth$taxon, '_', truth$metadata, '_', truth$associations)
   associations_match_vec <- paste0(associations$taxon, '_', associations$metadata, '_', associations$association)
   associations_match_vec <- associations_match_vec[associations$signif < threshold]
@@ -398,7 +454,11 @@ effect_size_correlation_maaslin3 <- function(truth, associations, threshold = 0.
     return(NA)
   }
   
-  return(cor(joined_df$truth, joined_df$association, use = 'pairwise.complete.obs', method = 'spearman'))
+  joined_df = joined_df %>%
+    dplyr::group_by(metadata) %>%
+    dplyr::summarise(correlation = cor(truth, association, use = 'pairwise.complete.obs', method = 'spearman'))
+  
+  return(mean(joined_df$correlation, na.rm=T))
 }
 
 issue_prop <- function(associations, tool) {
@@ -426,4 +486,29 @@ issue_prop <- function(associations, tool) {
   }
 }
 
+effect_size_mean_diff <- function(truth, associations) {
+  if (nrow(associations) == 0) {
+    return(c(NA))
+  }
+  
+  truth <- truth[truth$associations == 'abundance',]
+  
+  truth_match_vec <- unique(paste0(truth$taxon, '_', truth$metadata))
+  associations_match_vec <- paste0(associations$taxon, '_', associations$metadata)
 
+  associations <- associations[associations_match_vec %in% truth_match_vec, -4]
+  truth <- truth[truth_match_vec %in% associations_match_vec, -4]
+  
+  colnames(truth) <- c(colnames(truth)[-3], "truth")
+  colnames(associations) <- c(colnames(associations)[-3], "association")
+  
+  if (nrow(truth) > 0 & nrow(associations) > 0) {
+    joined_df <- full_join(truth, associations, by=c('taxon', 'metadata'))
+  } else {
+    return(c(NA, NA))
+  }
+  
+  first_return <- mean(joined_df$association - joined_df$truth, na.rm=T)
+
+  return(first_return)
+}

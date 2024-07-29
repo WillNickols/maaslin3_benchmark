@@ -14,3 +14,7 @@ output/*
 iHMP/analysis/data/intensities_hmp2.csv
 /CRC
 /infants
+/real_data_absolute_abundance/nguyen_covid
+/attic
+/iHMP/analysis/fit_out_Maaslin3CompAdjust
+/lefse_testing

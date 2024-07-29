@@ -56,7 +56,7 @@ prepare_metadata <- function(dataset_type) {
   metadata <- metadata[,colSums(metadata == '', na.rm = T) != nrow(metadata)]
   keep_cols <- c('External ID', 'Participant ID', 'week_num', 'site_name', 'Age at diagnosis',
                  'Education Level', 'Occupation', 'consent_age', 'diagnosis',
-                 colnames(metadata)[c(52:83, 85:111)], 'race', 'sex', 'BMI')
+                 colnames(metadata)[c(52:83, 85:111)], 'race', 'sex', 'BMI', 'reads_filtered')
   metadata <- metadata[,keep_cols]
   metadata <- metadata[,colSums(!is.na(metadata)) != 0]
   return(metadata)
@@ -87,17 +87,10 @@ metadata$dysbiosis_state <- factor(metadata$dysbiosis_state, levels = c('none', 
 
 dysbiosis_df <- metadata[, c("sample", "dysbiosis_state")]
 dysbiosis_df <- dysbiosis_df[order(dysbiosis_df$sample),]
-dysbiosis_df$sample <- gsub('_P$', '', dysbiosis_df$sample)
 dysbiosis_df <- dysbiosis_df[!duplicated(dysbiosis_df$sample),]
 
 metadata <- prepare_metadata(opt$options$dataset)
 metadata <- right_join(dysbiosis_df, metadata, by=c('sample'='External ID'))
-
-# Run Maaslin 3
-Maaslin3_path <- paste0(gsub("/$", "", workingDirectory), "/Maaslin3/R/")
-for (R_file in dir(Maaslin3_path, pattern = "*.R$")) {
-  source(file.path(Maaslin3_path, R_file))
-}
 
 metadata$participant_id <- metadata$`Participant ID`
 metadata$diagnosis <- factor(metadata$diagnosis, levels = c('nonIBD', 'UC', 'CD'))
@@ -118,11 +111,6 @@ if (opt$options$dataset == 'taxa') {
   taxa_table$clade_name <- NULL
   
 } else {
-  Maaslin3_path <- paste0(gsub("/$", "", workingDirectory), "/Maaslin3/R/")
-  for (R_file in dir(Maaslin3_path, pattern = "*.R$")) {
-    source(file.path(Maaslin3_path, R_file))
-  }
-  
   # Read in data
   mbx_table <- read.csv("data/intensities_hmp2.csv")
   annotations <- read.csv("data/annotations_hmp2.csv")
@@ -137,6 +125,9 @@ if (opt$options$dataset == 'taxa') {
   taxa_table <- mbx_table
 }
 
+metadata <- metadata[metadata$sample %in% colnames(taxa_table),]
+metadata <- metadata[as.numeric(mapvalues(metadata$sample, colnames(taxa_table), 1:ncol(taxa_table))),]
+
 if (opt$options$dataset == 'taxa') {
   tmp_fit_out <- paste0(gsub("/$", "", analysisDirectory), "/tmp_fit_out_Maaslin2")
 } else {
@@ -144,13 +135,13 @@ if (opt$options$dataset == 'taxa') {
 }
 
 if (opt$options$dataset == 'taxa') {
-  fit_out <- Maaslin2::Maaslin2(taxa_table, metadata, min_abundance = 0, min_prevalence = 0.1, output = tmp_fit_out, 
+  fit_out <- Maaslin2::Maaslin2(taxa_table, metadata, min_abundance = 0, min_prevalence = 0, output = tmp_fit_out, 
                                 min_variance = 0, normalization = 'TSS', transform = 'log', analysis_method = 'LM', 
-                                random_effects = c("participant_id"), fixed_effects = c('diagnosis', 'dysbiosis_state', 'Antibiotics', 'consent_age'), 
+                                random_effects = c("participant_id"), fixed_effects = c('diagnosis', 'dysbiosis_state', 'Antibiotics', 'consent_age', 'reads_filtered'), 
                                 save_scatter = FALSE, save_models = F, plot_heatmap = F, plot_scatter = F,
                                 max_significance = 0.1, reference = 'diagnosis,nonIBD;dysbiosis_state,none')$results
 } else {
-  fit_out <- Maaslin2::Maaslin2(taxa_table, metadata, min_abundance = 0, min_prevalence = 0.1, output = tmp_fit_out, 
+  fit_out <- Maaslin2::Maaslin2(taxa_table, metadata, min_abundance = 0, min_prevalence = 0, output = tmp_fit_out, 
                                 min_variance = 0, normalization = 'NONE', transform = 'log', analysis_method = 'LM', 
                                 random_effects = c("participant_id"), fixed_effects = c('diagnosis', 'dysbiosis_state', 'Antibiotics', 'consent_age'), 
                                 save_scatter = FALSE, save_models = F, plot_heatmap = F, plot_scatter = F,
