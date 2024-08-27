@@ -52,6 +52,7 @@ package_vec = c("reshape2", "ggplot2", "optparse",
                 "parallel", "stringi", "parallel", "plyr", "tidyr", "scales", "pbapply")
 invisible(suppressPackageStartupMessages(lapply(package_vec, require, character.only = TRUE)))
 source('library/run_evaluation_helpers.R')
+library(ggbeeswarm)
 
 files_in <- list.files('randomization_test/associations/', full.names = T)
 
@@ -105,6 +106,27 @@ results_df$dataset <- dataset_names[results_df$dataset]
 results_df$value <- results_df$value * 100
 results_df$Data <- ifelse(results_df$iter == 'non_null', "Original", "Randomized")
 results_df <- results_df[!is.na(results_df$dataset),] # %in% included_datasets
+
+# In-text numbres
+results_df %>%
+    dplyr::filter(Data == 'Randomized') %>%
+    dplyr::group_by(qval_type) %>%
+    dplyr::summarise(max(value))
+
+print(results_df %>%
+    dplyr::filter(Data == 'Randomized') %>%
+    dplyr::group_by(qval_type, dataset) %>%
+    dplyr::summarise(mean(value == 0)), n = 1000)
+
+print(results_df %>%
+          dplyr::filter(Data == 'Randomized') %>%
+          dplyr::group_by(qval_type) %>%
+          dplyr::summarise(sum(value > 0)), n = 1000)
+
+print(results_df %>%
+          dplyr::filter(Data == 'Original') %>%
+          dplyr::group_by(qval_type) %>%
+          dplyr::summarise(mean(value)), n = 1000)
 
 plot_out <- ggplot(results_df, aes(x = dataset, y = value, color = Data)) + 
   geom_beeswarm(cex = 0.1, size = 2.5) + 

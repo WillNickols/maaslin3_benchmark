@@ -658,7 +658,7 @@ sparseDOSSA2_Wrapper_omps <- function(simparams, simparamslabels, noZeroInflate)
                spikeMicrobes <- as.numeric(params["spikeMicrobes"]) # Proportion of Spiked-in Microbes
                nMetadata<-as.numeric(params["nMetadata"])  # Number of Metadata
                effectSize<-as.character(params["effectSize"]) # Effect Size
-               effectPos<-as.numeric(params["effectPos"]) # Effect Size
+               effectPos<-as.numeric(params["effectPos"]) # Proportion positive
                nOmps<-as.numeric(params["nOmps"]) # Effect Size
                nLevels<-as.numeric(params["nLevels"]) # Effect Size
                readDepth<-as.numeric(params["readDepth"]) # Library Size
@@ -1118,10 +1118,24 @@ generateMetadata_omps<-function(metadataType,
   if (length(columns_not_to_level) == 0) {
     t_UserMetadata <- data.frame(apply(t_UserMetadata, 2, as.factor))
   } else {
-    t_UserMetadata[,-columns_not_to_level] <- apply(t_UserMetadata[,-columns_not_to_level, drop=F], 2, as.factor)
+    t_UserMetadata[,-columns_not_to_level] <- data.frame(apply(t_UserMetadata[,-columns_not_to_level, drop=F], 2, as.factor))
+  }
+  for (col_num in setdiff(1:ncol(t_UserMetadata), columns_not_to_level)) {
+      t_UserMetadata[,col_num] <- as.factor(t_UserMetadata[,col_num])
   }
   colnames(t_UserMetadata) <- LETTERS[1:ncol(t_UserMetadata)]
-  t_UserMetadata_final <- model.matrix(formula(' ~ .'), t_UserMetadata)[,-1, drop=F]
+  
+  thermometer_encode <- function(factor_col) {
+      levels <- levels(factor_col)
+      encoded_matrix <- sapply(2:length(levels), function(i) as.numeric(as.integer(factor_col) >= i))
+      colnames(encoded_matrix) <- levels[-1]
+      return(encoded_matrix)
+  }
+  
+  t_UserMetadata_final <- t_UserMetadata %>%
+      dplyr::mutate(across(where(is.factor), thermometer_encode))
+  
+  t_UserMetadata_final <- model.matrix(formula(' ~ .'), t_UserMetadata_final)[,-1, drop=F]
   
   UserMetadata<-t(t_UserMetadata_final)
   
@@ -1175,21 +1189,35 @@ generateMetadata_groups<-function(metadataType,
   # Multivariable Scenario - Dichotomize Half of the Features
   t_UserMetadata <- finalMetadata
   for (i in 1:nrow(finalMetadata)) {
-    for (j in 1:ncol(finalMetadata)) {
-      t_UserMetadata[i,j] <- max(c(which(t_UserMetadata[i,j] > quantile(finalMetadata[,j], seq(0, 1, 1/nLevels))), 1))
-    }
+      for (j in 1:ncol(finalMetadata)) {
+          t_UserMetadata[i,j] <- max(c(which(t_UserMetadata[i,j] > quantile(finalMetadata[,j], seq(0, 1, 1/nLevels))), 1))
+      }
   }
   columns_not_to_level<-sample(1:totalMetadata, nMetadata)
   t_UserMetadata[,columns_not_to_level]<-finalMetadata[, columns_not_to_level]
   
   t_UserMetadata <- data.frame(t_UserMetadata)
   if (length(columns_not_to_level) == 0) {
-    t_UserMetadata <- data.frame(apply(t_UserMetadata, 2, as.factor))
+      t_UserMetadata <- data.frame(apply(t_UserMetadata, 2, as.factor))
   } else {
-    t_UserMetadata[,-columns_not_to_level] <- apply(t_UserMetadata[,-columns_not_to_level, drop=F], 2, as.factor)
+      t_UserMetadata[,-columns_not_to_level] <- data.frame(apply(t_UserMetadata[,-columns_not_to_level, drop=F], 2, as.factor))
+  }
+  for (col_num in setdiff(1:ncol(t_UserMetadata), columns_not_to_level)) {
+      t_UserMetadata[,col_num] <- as.factor(t_UserMetadata[,col_num])
   }
   colnames(t_UserMetadata) <- LETTERS[1:ncol(t_UserMetadata)]
-  t_UserMetadata_final <- model.matrix(formula(' ~ .'), t_UserMetadata)[,-1, drop=F]
+  
+  thermometer_encode <- function(factor_col) {
+      levels <- levels(factor_col)
+      encoded_matrix <- sapply(2:length(levels), function(i) as.numeric(as.integer(factor_col) >= i))
+      colnames(encoded_matrix) <- levels[-1]
+      return(encoded_matrix)
+  }
+  
+  t_UserMetadata_final <- t_UserMetadata %>%
+      dplyr::mutate(across(where(is.factor), thermometer_encode))
+  
+  t_UserMetadata_final <- model.matrix(formula(' ~ .'), t_UserMetadata_final)[,-1, drop=F]
   
   UserMetadata<-t(t_UserMetadata_final)
   

@@ -40,7 +40,7 @@ for (col in colnames(metadata)) {
 
 tmp_fit_out <- paste0(gsub("/$", "", analysisDirectory), "/tmp_fit_out_Maaslin3CompAdjust")
 
-param_list <- list(input_data = taxa_table, 
+fit_out <- maaslin3::maaslin3(input_data = taxa_table, 
                    input_metadata = metadata, 
                    output = tmp_fit_out, 
                    normalization = 'TSS', 
@@ -49,7 +49,6 @@ param_list <- list(input_data = taxa_table,
                    formula = '~ day + read_depth + (1|infant)',
                    plot_summary_plot = T, plot_associations = T, max_significance = 0.1, 
                    augment = T, median_comparison_abundance=T, median_comparison_prevalence=F)
-fit_out <- maaslin3::maaslin3(param_list)
 
 unlink(tmp_fit_out, recursive = T)
 

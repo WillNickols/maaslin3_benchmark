@@ -167,12 +167,12 @@ if (!outputs_already_exist){
     sink('/dev/null')
     if ('ID' %in% colnames(metadata) & length(unique(metadata$ID)) != length(metadata$ID)) {
       mm <- model.matrix(formula(paste0("~ ", 
-                                        paste0(colnames(metadata), 
+                                        paste0(colnames(metadata)[!colnames(metadata) %in% c("read_depth")], 
                                                collapse = " + "), 
                                         collapse = "")),metadata)
     } else {
       mm <- model.matrix(formula(paste0("~ ", 
-                                        paste0(colnames(metadata)[colnames(metadata) != "ID"], 
+                                        paste0(colnames(metadata)[!colnames(metadata) %in% c("ID", "read_depth")], 
                                                collapse = " + "), 
                                         collapse = "")),metadata)
     }

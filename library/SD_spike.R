@@ -159,7 +159,7 @@ SparseDOSSA2_spike <- function(template = "Stool",
                                       feature_param = feature_param,
                                       metadata = metadata_matrix,
                                       spike_df = feature_metadata_spike_df)
-    spike_in_abs_abun <- round(colSums(mat_spiked_metadata) / runif(ncol(mat_spiked_metadata), 1, 10))
+    spike_in_abs_abun <- round(colSums(mat_spiked_metadata) * runif(ncol(mat_spiked_metadata), 0.01, 0.1))
     mat_spiked_metadata <- rbind(mat_spiked_metadata, spike_in_abs_abun)
     rownames(mat_spiked_metadata) <- c(rownames(mat_spiked_metadata)[-nrow(mat_spiked_metadata)], 
                                        paste0('Feature', nrow(mat_spiked_metadata)))

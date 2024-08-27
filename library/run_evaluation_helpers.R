@@ -49,6 +49,9 @@ prepare_associations_general <- function(associations, tool, generator = 'SD2', 
   if (tool %in% c('ALDEx2', 'ANCOMBC')) {
     if (tool == 'ANCOMBC') {
       associations <- associations[is.na(associations$error),]
+      if (generator != 'ANCOM_BC_generator') {
+          associations <- associations[associations$associations != 'prevalence',]
+      }
       associations$effect_size <- associations$effect_size / log(2) # Inflate because transformation is originally base e
     }
     if (generator == 'SimSeq' | generator == 'ANCOM_BC_generator') {
@@ -107,10 +110,16 @@ prepare_associations_abundance <- function(associations, tool, generator = 'SD2'
   }
 }
 
-prepare_associations_maaslin3 <- function(associations, tool, remove_possible_error = F, threshold = -1) {
+prepare_associations_maaslin3 <- function(associations, tool, allow_abun_to_prev = F, threshold = -1) {
   if (!grepl('Maaslin3', tool)) {
     stop("Only works with Maaslin3")
   }
+    
+  if (allow_abun_to_prev) {
+      associations$error[grepl("Prevalence association possibly induced", 
+                               associations$error)] <- NA
+  }
+    
   associations <- associations[associations$error %in% allowed_errors,]
   # associations <- associations[abs(associations$effect_size) > 1,]
   outputs <- data.frame(taxon = associations$taxon,

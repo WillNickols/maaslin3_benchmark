@@ -72,7 +72,7 @@ metadata$metadatum <- factor(metadata$metadatum)
 tmp_fit_out <- paste0('randomization_test', "/tmp_out_non_null/", dataset)
 dir.create(tmp_fit_out, recursive = T, showWarnings = F)
 
-param_list <- list(input_data = abundance, 
+fit_out <- maaslin3::maaslin3(input_data = abundance, 
                    input_metadata = metadata, 
                    output = tmp_fit_out, 
                    normalization = 'TSS', 
@@ -83,7 +83,6 @@ param_list <- list(input_data = abundance,
                    plot_summary_plot = F, 
                    plot_associations = F, 
                    max_significance = 0.1)
-fit_out <- maaslin3::maaslin3(param_list)
 
 unlink(tmp_fit_out, recursive = T)
 

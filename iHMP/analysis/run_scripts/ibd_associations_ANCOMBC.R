@@ -142,20 +142,18 @@ both_tse <- TreeSummarizedExperiment(
   colData = smd)
 if (opt$options$dataset == 'taxa') {
   ancombc_out <- ancombc2(both_tse, 
-                          fix_formula = 'diagnosis + dysbiosis_state + Antibiotics + consent_age',
+                          fix_formula = 'diagnosis + dysbiosis_state + Antibiotics + consent_age + reads_filtered',
                           rand_formula = '(1|participant_id)', 
                           p_adj_method = "BH", 
                           alpha = 0.1, 
-                          prv_cut = 0,
-                          n_cl = nCores)
+                          n_cl = nCores, prv_cut = 0)
 } else {
   ancombc_out <- ancombc2(both_tse, 
                           fix_formula = 'diagnosis + dysbiosis_state + Antibiotics + consent_age',
                           rand_formula = '(1|participant_id)', 
                           p_adj_method = "BH", 
                           alpha = 0.1, 
-                          prv_cut = 0,
-                          n_cl = nCores)
+                          n_cl = nCores, prv_cut = 0)
 }
 
 glm.test <- ancombc_out$res

@@ -1,9 +1,0 @@
-metadataType: MVAref
-nMicrobes: 100
-nSubjects: 50 20 100 200
-spikeMicrobes: 0.1
-effectSize: 5
-effectPos: 0.5
-nMetadata: 5
-nPerSubject: 2
-readDepth: 50000

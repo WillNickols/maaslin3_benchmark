@@ -135,7 +135,7 @@ if (opt$options$dataset == 'taxa') {
 }
 
 if (opt$options$dataset == 'taxa') {
-  param_list <- list(input_data = taxa_table,
+  fit_out <- maaslin3::maaslin3(input_data = taxa_table,
                      input_metadata = metadata, 
                      output = tmp_fit_out, 
                      normalization = 'TSS', 
@@ -145,11 +145,11 @@ if (opt$options$dataset == 'taxa') {
                      plot_associations = T, 
                      max_significance = 0.1, 
                      augment = T, 
-                     median_comparison_abundance = T, 
+                     median_comparison_abundance = F, 
                      median_comparison_prevalence = F, 
                      cores=nCores)
 } else {
-  param_list <- list(input_data = taxa_table, 
+  fit_out <- maaslin3::maaslin3(input_data = taxa_table, 
                      input_metadata = metadata, 
                      output = tmp_fit_out, 
                      normalization = 'NONE', 
@@ -163,7 +163,6 @@ if (opt$options$dataset == 'taxa') {
                      median_comparison_prevalence = F, 
                      cores=nCores)
 }
-fit_out <- maaslin3::maaslin3(param_list)
 
 fit_out_lm <- fit_out$fit_data_abundance$results
 fit_out_lm <- fit_out_lm[c("feature", "metadata", "value", "coef", "pval_individual", "error", "qval_individual", "pval_joint", "qval_joint", "N", "N.not.zero")]

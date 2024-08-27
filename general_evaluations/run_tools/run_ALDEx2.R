@@ -164,15 +164,21 @@ if (!outputs_already_exist){
       ID <- rownames(metadata)
     }
     
+    if(generator == 'SD2') {
+        fixed_effects <- colnames(metadata)[!colnames(metadata) %in% c("ID", "read_depth")]
+    } else {
+        fixed_effects <- colnames(metadata)[!colnames(metadata) %in% c("ID", "read_depth")]
+    }
+    
     sink('/dev/null')
     if ('ID' %in% colnames(metadata) & length(unique(metadata$ID)) != length(metadata$ID)) {
       mm <- model.matrix(formula(paste0("~ ", 
-                                        paste0(colnames(metadata), 
+                                        paste0(c(fixed_effects, "ID"), 
                                                collapse = " + "), 
                                         collapse = "")),metadata)
     } else {
       mm <- model.matrix(formula(paste0("~ ", 
-                                        paste0(colnames(metadata)[colnames(metadata) != "ID"], 
+                                        paste0(fixed_effects, 
                                                collapse = " + "), 
                                         collapse = "")),metadata)
     }

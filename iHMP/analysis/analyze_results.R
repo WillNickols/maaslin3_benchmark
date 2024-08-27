@@ -4,6 +4,7 @@ library(dplyr)
 library(ggplot2)
 library(stringr)
 library(RColorBrewer)
+library(vegan)
 
 figures_folder <- 'Figures/paper_figures/'
 
@@ -16,6 +17,8 @@ iHMP_upset_plot <- function() {
                                 !grepl('\\|t__', taxa_table$clade_name)),]
   rownames(taxa_table) <- taxa_table$clade_name
   taxa_table$clade_name <- NULL
+  
+  # Filtered to be common
   keep_taxa <- gsub(".*s__", "", rownames(taxa_table)[rowMeans(taxa_table > 0.1) > 0.01])
   
   all_results <- list.files('iHMP/analysis/results/', full.names = T)
@@ -59,6 +62,7 @@ iHMP_upset_plot <- function() {
                                              paste0('dysbiosis_state_', fit_out_joint$metadata_value))
       fit_out_joint$tool <- 'ANCOMBC'
       fit_out_joint$coef <- fit_out_joint$effect_size
+      associations$effect_size <- associations$effect_size / log(2) # Inflate because transformation is originally base e
     }
     
     if (grepl('ALDEx2', result)) {
@@ -79,11 +83,25 @@ iHMP_upset_plot <- function() {
   
   growing_df <- growing_df[growing_df$qval < 0.1 & growing_df$feature %in% keep_taxa,]
   growing_df$association <- paste0(growing_df$feature, '-', growing_df$metadata_value)
+  growing_df <- growing_df[abs(growing_df$coef) > 1,]
+  growing_df <- growing_df[growing_df$tool != 'MaAsLin 3 Relative',]
   
-  listInput <- list(`MaAsLin 2` = growing_df$association[growing_df$tool == 'Maaslin2'], 
-       `MaAsLin 3` = growing_df$association[growing_df$tool == 'MaAsLin 3 Median\nAdjusted'], 
-       `ANCOM-BC2` = growing_df$association[growing_df$tool == 'ANCOMBC'],
-       ALDEx2 = growing_df$association[growing_df$tool == 'ALDEx2'])
+  # MaAsLin 3 overlap
+  print(mean(unique(growing_df$association[growing_df$tool == 'MaAsLin 3 Median\nAdjusted']) %in% 
+                 growing_df$association[growing_df$tool == 'Maaslin2']))
+  print(mean(unique(growing_df$association[growing_df$tool == 'MaAsLin 3 Median\nAdjusted']) %in% 
+                 growing_df$association[growing_df$tool == 'ALDEx2']))
+  print(mean(unique(growing_df$association[growing_df$tool == 'MaAsLin 3 Median\nAdjusted']) %in% 
+                 growing_df$association[growing_df$tool == 'ANCOMBC']))
+  
+  # ALDEx2 only
+  print(mean(!unique(growing_df$association[growing_df$tool == 'ALDEx2']) %in% 
+                 growing_df$association[growing_df$tool != 'ALDEx2']))
+
+  listInput <- list(`MaAsLin 2` = unique(growing_df$association[growing_df$tool == 'Maaslin2']), 
+       `MaAsLin 3` = unique(growing_df$association[growing_df$tool == 'MaAsLin 3 Median\nAdjusted']), 
+       `ANCOM-BC2` = unique(growing_df$association[growing_df$tool == 'ANCOMBC']),
+       ALDEx2 = unique(growing_df$association[growing_df$tool == 'ALDEx2']))
   
   plot_out <- upset(fromList(listInput), order.by = "freq", text.scale = 2.5)
   
@@ -91,6 +109,7 @@ iHMP_upset_plot <- function() {
   plot_out
   dev.off()
 }
+iHMP_upset_plot()
   
 recreate_summary_plot <- function() {
   # Clean up default HMP2 plot
@@ -208,26 +227,51 @@ recreate_summary_plot <- function() {
   
   tmp_fit_out <- paste0("iHMP/analysis/fit_out_Maaslin3CompAdjust")
   
-  param_list <- list(input_data = taxa_table,
-                     input_metadata = metadata, 
-                     output = tmp_fit_out, 
-                     normalization = 'TSS', 
-                     transform = 'LOG', 
-                     formula = '~ diagnosis + dysbiosis_state + Antibiotics + consent_age + reads_filtered + (1 | participant_id)', 
-                     plot_summary_plot = T, 
-                     plot_associations = F, 
-                     max_significance = 0.1, 
-                     augment = T, 
-                     median_comparison_abundance = T, 
-                     median_comparison_prevalence = F, 
-                     cores=1)
+  param_list <- list()
   
+  keep_taxa <- c("Faecalibacterium prausnitzii", 
+                 "Bacteroides uniformis",
+                 "Eubacterium rectale",
+                 "Phocaeicola vulgatus",
+                 "Bacteroides ovatus",
+                 "Blautia obeum",
+                 "Roseburia inulinivorans",
+                 "Roseburia hominis",
+                 "Clostridium sp. AT4",
+                 "Enterocloster bolteae", 
+                 "Ruminococcus gnavus", 
+                 "Veillonella parvula",
+                 "Clostridium neonatale",
+                 "Klebsiella pneumoniae",
+                 "Ruminococcus torques",
+                 "Escherichia coli",
+                 "Akkermansia muciniphila",
+                 "Bacteroides fragilis",
+                 "Bacteroides thetaiotaomicron",
+                 "Dorea formicigenerans")
+  
+  results_in <- read.csv(file.path(tmp_fit_out, "all_results.tsv"), sep='\t')
+  results_in <- results_in[results_in$feature %in% keep_taxa,]
+  write.table(results_in, file.path(tmp_fit_out, "all_results.tsv"), sep = '\t', row.names = F)
+  
+  results_in <- read.csv(file.path(tmp_fit_out, "significant_results.tsv"), sep='\t')
+  results_in <- results_in[results_in$feature %in% keep_taxa,]
+  write.table(results_in, file.path(tmp_fit_out, "significant_results.tsv"), sep = '\t', row.names = F)
+    
   # Set the new heatmap and coefficient plot variables and order them
-  param_list$heatmap_vars = c('Diagnosis CD', 'Diagnosis UC', 'Abx Used', 'Age', 'Read depth')
-  param_list$coef_plot_vars = c('Dysbiosis CD', 'Dysbiosis UC')
-  
-  maaslin_plot_results_from_output(param_list)
+  maaslin_plot_results_from_output(metadata = metadata, 
+                                   output = tmp_fit_out, 
+                                   normalization = 'TSS', 
+                                   transform = 'LOG', 
+                                   plot_summary_plot = T, 
+                                   plot_associations = F, 
+                                   max_significance = 0.1, 
+                                   median_comparison_abundance = T, 
+                                   median_comparison_prevalence = F, 
+                                   heatmap_vars = c('Diagnosis CD', 'Diagnosis UC', 'Abx Used', 'Age', 'Read depth'),
+                                   coef_plot_vars = c('Dysbiosis CD', 'Dysbiosis UC'))
 }
+recreate_summary_plot()
   
 # Diet associations
 diet_associations_plot <- function() {
@@ -255,9 +299,19 @@ diet_associations_plot <- function() {
   all_combinations <- expand.grid(food_group = unique(signif_subset$food_group), 
                                   variable_type = unique(signif_subset$variable_type))
   
+  ordered_assoc <- paste0(signif_subset$feature, "_", signif_subset$food_group)[
+      signif_subset$variable_type == 'ordered']
+  group_assoc <- paste0(signif_subset$feature, "_", signif_subset$food_group)[
+      signif_subset$variable_type == 'group']
+  ordered_assoc <- unique(ordered_assoc)
+  
+  # Overlap in group and ordered predictors
+  print(mean(ordered_assoc %in% group_assoc))
+  print(mean(group_assoc %in% ordered_assoc))
+  
   plot_df <- signif_subset %>%
     group_by(food_group, variable_type) %>%
-    summarize(count = n(), .groups = 'drop') %>%
+    dplyr::summarize(count = n(), .groups = 'drop') %>%
     right_join(all_combinations, by = c("food_group", "variable_type")) %>%
     replace(is.na(.), 0)
   
@@ -279,8 +333,51 @@ diet_associations_plot <- function() {
     labs(fill = '')
   ggsave(plot = plot_out, filename = paste0(figures_folder, 'HMP2_diet.png'), width = 12, height = 4)
 }
+diet_associations_plot()
 
-
-
+in_text_vals <- function() {
+    associations_in <- read.csv("iHMP/analysis/results//ibd_associations_Maaslin3CompAdjust.tsv", sep = '\t')
+    associations_in <- associations_in %>%
+        filter(metadata %in% c("diagnosis", "dysbiosis_state"),
+               qval_individual < 0.1,
+               is.na(error),
+               abs(coef) > 1)
+    
+    print(table(associations_in$association, ifelse(associations_in$coef < 0, "negative", "positive")))
+    
+    keep_taxa <- c("Faecalibacterium prausnitzii", 
+                   "Bacteroides uniformis",
+                   "Eubacterium rectale",
+                   "Phocaeicola vulgatus",
+                   "Bacteroides ovatus",
+                   "Blautia obeum",
+                   "Roseburia inulinivorans",
+                   "Roseburia hominis",
+                   "Clostridium sp. AT4",
+                   "Enterocloster bolteae", 
+                   "Ruminococcus gnavus", 
+                   "Veillonella parvula",
+                   "Clostridium neonatale",
+                   "Klebsiella pneumoniae",
+                   "Ruminococcus torques",
+                   "Escherichia coli",
+                   "Akkermansia muciniphila",
+                   "Bacteroides fragilis",
+                   "Bacteroides thetaiotaomicron",
+                   "Dorea formicigenerans")
+    
+    associations_in <- read.csv("iHMP/analysis/results//ibd_associations_Maaslin3CompAdjust.tsv", sep = '\t')
+    associations_in <- associations_in %>%
+        filter(metadata %in% c("diagnosis", "dysbiosis_state"),
+               is.na(error))
+    
+    associations_in$feature <- gsub('.*s__', '', associations_in$feature) %>%
+        gsub(pattern = "_", replacement = " ")
+    
+    associations_in[associations_in$feature %in% keep_taxa & 
+                        grepl("Roseburia", associations_in$feature),]
+    
+}
+in_text_vals()
 
 

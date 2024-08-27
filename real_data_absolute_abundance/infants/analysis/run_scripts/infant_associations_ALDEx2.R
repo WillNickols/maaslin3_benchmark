@@ -25,8 +25,6 @@ read_depth_file <- read_depth_file[grepl('NICU_', read_depth_file$sample_name) &
 read_depth_file$sample_name <- gsub('_bac16.*', '', read_depth_file$sample_name)
 read_depth_file <- read_depth_file[,c('sample_name', 'read_count')]
 
-df <- data.frame(sample = names(guessed_read_depths), read_depth = guessed_read_depths)
-
 metadata <- left_join(metadata, read_depth_file, by=c('sample' = 'sample_name'))
 rownames(metadata) <- metadata$sample
 metadata$sample <- NULL

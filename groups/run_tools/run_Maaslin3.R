@@ -184,12 +184,12 @@ if (!outputs_already_exist){
     
     sink('/dev/null')
     if(length(ID)==length(unique(ID))){
-      param_list <- list(input_data = abundance, 
+      fit_out <- maaslin3::maaslin3(input_data = abundance, 
                          input_metadata = metadata, 
                          output = tmp_fit_out, 
                          normalization = 'TSS', 
                          transform = 'LOG',
-                         fixed_effects = colnames(metadata)[!colnames(metadata) %in% c(group_cols, "ID")], 
+                         fixed_effects = colnames(metadata)[!colnames(metadata) %in% c(group_cols, "ID", "read_depth")], 
                          group_effects = group_cols,
                          median_comparison_abundance = F, 
                          median_comparison_prevalence = F,
@@ -197,12 +197,12 @@ if (!outputs_already_exist){
                          plot_associations = F, 
                          max_significance = 0.1)
     } else{
-      param_list <- list(input_data = abundance, 
+      fit_out <- maaslin3::maaslin3(input_data = abundance, 
                          input_metadata = metadata, 
                          output = tmp_fit_out, 
                          normalization = 'TSS', 
                          transform = 'LOG',
-                         fixed_effects = colnames(metadata)[!colnames(metadata) %in% c(group_cols, "ID")],
+                         fixed_effects = colnames(metadata)[!colnames(metadata) %in% c(group_cols, "ID", "read_depth")],
                          random_effects = "ID", 
                          group_effects = group_cols,
                          median_comparison_abundance = F, 
@@ -211,7 +211,6 @@ if (!outputs_already_exist){
                          plot_associations = F, 
                          max_significance = 0.1)
     }
-    fit_out <- maaslin3::maaslin3(param_list)
     sink()
     
     unlink(tmp_fit_out, recursive = T)

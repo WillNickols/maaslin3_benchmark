@@ -149,6 +149,9 @@ if (!outputs_already_exist){
     rownames(metadata) <- metadata$sample
     metadata$sample <- NULL
     
+    binary_cols <- colnames(metadata)[
+        apply(metadata, 2, function(x){length(unique(x)) == 2})]
+    
     # Don't convert to relative abundance
     # abundance <- t(t(abundance) / colSums(abundance))
     
@@ -165,11 +168,17 @@ if (!outputs_already_exist){
     }
     
     sink('/dev/null')
+    if(generator == 'SD2') {
+        fixed_effects <- colnames(metadata)[!colnames(metadata) %in% c("ID", "read_depth")]
+    } else {
+        fixed_effects <- colnames(metadata)[!colnames(metadata) %in% c("ID", "read_depth")]
+    }
+    
     if ('ID' %in% colnames(metadata) & length(unique(metadata$ID)) != length(metadata$ID)) {
-      fix_formula <- paste0(colnames(metadata)[!colnames(metadata) %in% c("ID", "read_depth")], collapse = " + ")
+      fix_formula <- paste0(fixed_effects, collapse = " + ")
       random_formula <- "(1|ID)"
     } else {
-      fix_formula <- paste0(colnames(metadata)[!colnames(metadata) %in% c("ID", "read_depth")], collapse = " + ")
+      fix_formula <- paste0(fixed_effects, collapse = " + ")
       random_formula <- NULL
     }
   
@@ -179,9 +188,18 @@ if (!outputs_already_exist){
       both_tse <- TreeSummarizedExperiment(
         assays = assays,
         colData = smd)
-      ancombc_out <- ancombc2(both_tse, fix_formula = fix_formula,
-                              rand_formula = random_formula, p_adj_method = "BH", 
-                              alpha = 0.1, prv_cut = 0)
+      if (generator == 'ANCOM_BC_generator') {
+          ancombc_out <- ancombc2(both_tse, fix_formula = fix_formula,
+                                  rand_formula = random_formula, p_adj_method = "BH", 
+                                  struc_zero = T,
+                                  group = binary_cols[1],
+                                  alpha = 0.1, prv_cut = 0)
+          
+      } else {
+          ancombc_out <- ancombc2(both_tse, fix_formula = fix_formula,
+                                  rand_formula = random_formula, p_adj_method = "BH", 
+                                  alpha = 0.1, prv_cut = 0)
+      }
       ancombc_out
     }, error = function(err) {
       if (grepl('nPlease remove', err)) {
@@ -193,9 +211,18 @@ if (!outputs_already_exist){
         both_tse <- TreeSummarizedExperiment(
           assays = assays,
           colData = smd)
-        ancombc_out <- ancombc2(both_tse, fix_formula = fix_formula,
-                                rand_formula = random_formula, p_adj_method = "BH", 
-                                alpha = 0.1, prv_cut = 0)
+        if (generator == 'ANCOM_BC_generator') {
+            ancombc_out <- ancombc2(both_tse, fix_formula = fix_formula,
+                                    rand_formula = random_formula, p_adj_method = "BH", 
+                                    struc_zero = T,
+                                    group = binary_cols[1],
+                                    alpha = 0.1, prv_cut = 0)
+            
+        } else {
+            ancombc_out <- ancombc2(both_tse, fix_formula = fix_formula,
+                                    rand_formula = random_formula, p_adj_method = "BH", 
+                                    alpha = 0.1, prv_cut = 0)
+        }
         return(ancombc_out)
         }, error = function(err) {
           return(NULL)
@@ -223,6 +250,13 @@ if (!outputs_already_exist){
       glm.test$metric <- gsub("_.*", "", glm.test$variable)
       glm.test$variable <- gsub("^[^_]*_|^passed_ss_", "", glm.test$variable)
       glm.test <- reshape2::dcast(formula = taxon + variable ~ metric, glm.test)
+      
+      struc_zeros <- ancombc_out$zero_ind[ancombc_out$zero_ind[,2] != ancombc_out$zero_ind[,3],]
+      glm.test <- rbind(glm.test, data.frame(taxon = struc_zeros$taxon,
+                                             variable = binary_cols[1],
+                                             lfc = ifelse(struc_zeros[,3] == F, Inf, -Inf),
+                                             p = 0,
+                                             passed = 1))
       
       outputs <- data.frame(taxon = glm.test$taxon,
                             metadata = glm.test$variable,

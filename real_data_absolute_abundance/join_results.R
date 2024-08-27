@@ -11,8 +11,8 @@ figures_folder <- paste0('Figures/paper_figures/')
 
 all_results <- c(list.files('real_data_absolute_abundance/Barlow/analysis/results/', full.names = T),
                  list.files('real_data_absolute_abundance/infants/analysis/results/', full.names = T),
-                 list.files('real_data_absolute_abundance/VieiraSilva/analysis/results/', full.names = T),
-                 list.files('real_data_absolute_abundance/nguyen_covid/analysis/results/', full.names = T))
+                 list.files('real_data_absolute_abundance/VieiraSilva/analysis/results/', full.names = T))
+                 # list.files('real_data_absolute_abundance/nguyen_covid/analysis/results/', full.names = T))
 
 problematic_categoricals <- c(DietKeto_DietKeto = 'Diet_Keto',
                               diagnosisCD_diagnosisCD = 'diagnosis_CD',
@@ -166,7 +166,7 @@ for (study in unique(growing_df$study)) {
   plot_list[[study]] <- ggMarginal(p, type = "histogram", margins = "both", groupFill = T)
 }
 
-plot_out <- grid.arrange(plot_list[[2]], plot_list[[1]], plot_list[[3]], plot_list[[4]], ncol = 4)
+plot_out <- grid.arrange(plot_list[[2]], plot_list[[1]], plot_list[[3]], ncol = 3)
 ggsave(paste0(figures_folder, 'abs_vs_rel_real_data.png'),
        plot = plot_out, width = 12, height = 5)
 
@@ -241,13 +241,38 @@ plot_out_2 <- ggplot(growing_df_2, aes(x = tool, y = value, fill = meta_in_study
 ggsave(paste0(figures_folder, 'abs_vs_real_all_tools.png'),
        plot = plot_out_2, width = 10, height = 3.5)
 
+# In-text numbers
+growing_df_2 %>%
+    filter(tool == "MaAsLin 3")
 
+growing_df_2 %>%
+    dplyr::filter(study != "Infant gut") %>%
+    dplyr::group_by(tool, variable) %>%
+    dplyr::summarize(mean(value))
 
+taxa_table <- read.csv('real_data_absolute_abundance/infants/analysis/data/41586_2021_3241_MOESM4_ESM.csv', skip = 1, check.names = F)
+taxa_table <- taxa_table[,grepl("NICU|OTU_ID", colnames(taxa_table))]
+taxa_table <- taxa_table[rowSums(is.na(taxa_table)) == 0,]
 
+rownames(taxa_table) <- taxa_table$OTU_ID
+taxa_table$OTU_ID <- NULL
 
+mean(taxa_table == 0)
 
+# Read in data
+taxa_table <- read.csv('real_data_absolute_abundance/Barlow/analysis/data/Absolute_Abundance_Table.csv', check.names = F, sep = ',')
+rownames(taxa_table) <- taxa_table[,1]
+taxa_table[,1] <- NULL
 
+taxa_table <- taxa_table[,!colnames(taxa_table) %in% c('Diet', 'Site', 'Day', 'mouse', 'Cage')]
+colnames(taxa_table) <- make.names(colnames(taxa_table))
+mean(taxa_table == 0)
 
+taxa_table <- read.csv('real_data_absolute_abundance/VieiraSilva/analysis/data/QMP.matrix.tsv', check.names = F, sep = '\t')
+rownames(taxa_table) <- taxa_table[,1]
+taxa_table[,1] <- NULL
+taxa_table <- t(apply(taxa_table, 1, function(x) {x / sum(x)})) # Convert to relative abundance
+mean(taxa_table == 0)
 
 
 

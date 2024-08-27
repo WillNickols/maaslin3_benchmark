@@ -109,7 +109,7 @@ SD2_spike_microbe_figure <- function() {
         if(inherits(possible_error, "error")) next
         
         new_row <- c(effect_size_mean_diff(truth, prepare_associations_abundance(associations, tool, generator)),
-                     effect_size_correlation(truth, prepare_associations_abundance(associations, tool, generator), threshold = 1))
+                     effect_size_correlation(truth, prepare_associations_abundance(associations, tool, generator)))
         new_row <- lapply(new_row, function(x) {x})
         names(new_row) <- metrics
         
@@ -150,8 +150,14 @@ SD2_spike_microbe_figure <- function() {
   melted_df <- melted_df[!is.na(melted_df$tool),]
   
   # Make plotting dimensions reasonable
-  melted_df <- melted_df[!is.na(melted_df$value) & melted_df$value < 3 & melted_df$value > -7,]
-  melted_df <- melted_df[melted_df$spikeMicrobes %in% c(0.1, 0.3, 0.5, 0.7, 0.9),]
+  melted_df <- melted_df[!is.na(melted_df$value) & melted_df$value < 5 & melted_df$value > -6,]
+  melted_df <- melted_df[melted_df$spikeMicrobes %in% c("0.1", "0.3", "0.5", "0.7", "0.9"),]
+  
+  # In-text numbers
+  melted_df %>%
+      dplyr::filter(variable == 'Effect size bias' & spikeMicrobes == "0.9") %>%
+      dplyr::group_by(tool) %>%
+      dplyr::summarize(mean(value, na.rm=T))
   
   plot_out <- ggplot(melted_df, aes(x = get(param_name), y = value, fill = tool)) + 
     geom_boxplot(position = position_dodge(preserve = "single")) + 
@@ -168,3 +174,4 @@ SD2_spike_microbe_figure <- function() {
   ggsave(paste0(figures_folder, 'SD2_spike_microbe_figure.png'),
          plot = plot_out, width = 10, height = 4)
 }
+SD2_spike_microbe_figure()

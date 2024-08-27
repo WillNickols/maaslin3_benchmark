@@ -1,6 +1,6 @@
 metadataType: ArcticTransects cdi_schubert crc_baxter edd_singh ob_goodrich
 nMicrobes: 90 50
-nSubjects: 50 20 100
+nSubjects: 100 20 50
 spikeMicrobes: 0.1 0.05
 effectSize: 1
 effectPos: 1

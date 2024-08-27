@@ -165,6 +165,12 @@ groups_sample_size_figure <- function() {
   melted_df$tool <- factor(melted_df$tool, levels = c('MaAsLin 3 (No adjustment)', 'MaAsLin 3'))
   melted_df <- melted_df[!is.na(melted_df$tool),]
   
+  # In-text numbers
+  melted_df %>%
+      dplyr::filter(variable == 'Precision') %>%
+      dplyr::group_by(tool, nSubjects) %>%
+      dplyr::summarize(mean(value, na.rm=T))
+  
   plot_out <- ggplot(melted_df, aes(x = get(param_name), y = value, fill = tool)) + 
     geom_boxplot(position = position_dodge(preserve = "single")) + 
     facet_wrap(~variable, scales = 'free') + 
@@ -180,7 +186,7 @@ groups_sample_size_figure <- function() {
   ggsave(paste0(figures_folder, 'groups_sample_size_figure.png'),
          plot = plot_out, width = 8, height = 4)
 }
-
+groups_sample_size_figure()
 
 
 

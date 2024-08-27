@@ -38,7 +38,8 @@ smd = S4Vectors::DataFrame(metadata)
 both_tse <- TreeSummarizedExperiment(
   assays = assays,
   colData = smd)
-ancombc_out <- ancombc2(both_tse, fix_formula = 'Diet + Day + read_count', #rand_formula = '(1|mouse)', # Doesn't work for some reason
+# No read count because samples fixed at 19500 read depth
+ancombc_out <- ancombc2(both_tse, fix_formula = 'Diet + Day', # rand_formula = '(1|mouse)', Random effect doesn't work for some reason
                         p_adj_method = "BH", 
                         alpha = 0.1, n_cl = 1, prv_cut = 0)
 

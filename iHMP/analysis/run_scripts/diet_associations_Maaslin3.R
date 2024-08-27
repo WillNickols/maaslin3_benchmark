@@ -169,7 +169,7 @@ metadata$food_group <- factor(metadata$food_group, levels = c("No, I did not con
 
 metadata$dysbiosis_state <- factor(metadata$dysbiosis_state, levels = c('none', 'dysbiosis_CD'))
 
-param_list <- list(input_data = taxa_table,
+fit_out <- maaslin3::maaslin3(input_data = taxa_table,
                    input_metadata = metadata, 
                    output = tmp_fit_out, 
                    normalization = 'TSS', 
@@ -184,8 +184,6 @@ param_list <- list(input_data = taxa_table,
                    median_comparison_abundance = T, 
                    median_comparison_prevalence = F, 
                    cores=nCores)
-
-fit_out <- maaslin3::maaslin3(param_list)
 
 fit_out_lm <- fit_out$fit_data_abundance$results
 fit_out_lm <- fit_out_lm[c("feature", "metadata", "value", "coef", "pval_individual", "error", "qval_individual", "pval_joint", "qval_joint", "N", "N.not.zero")]

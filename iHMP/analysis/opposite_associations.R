@@ -106,5 +106,5 @@ plot3 <- ggplot(joined_df, aes(x = age, y = abun)) +
 summary(glm(abun ~ age, joined_df, family = binomial))
 
 combined_plot <- grid.arrange(plot1, plot2, plot3, ncol=3)
-ggsave(combined_plot, filename = 'Figures/paper_figures/opposite_associations.png', width = 8, height = 2.5)
+ggsave(combined_plot, filename = 'Figures/paper_figures/opposite_associations.png', width = 7, height = 2)
 

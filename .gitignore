@@ -4,7 +4,6 @@ output/*
 *.xlsx
 *.png
 *.ai
-*.tsv
 /Figures
 /Input
 /Output
@@ -18,3 +17,13 @@ iHMP/analysis/data/intensities_hmp2.csv
 /attic
 /iHMP/analysis/fit_out_Maaslin3CompAdjust
 /lefse_testing
+/real_data_absolute_abundance/synthetic_MSK
+.RData
+coefficient_investigations/Coefficient-math.pdf
+/coefficient_investigations
+/coefficient_investigations
+internal_README.md
+/low_rep
+/randomization_test/associations
+/randomization_test/raw_data
+*.gz

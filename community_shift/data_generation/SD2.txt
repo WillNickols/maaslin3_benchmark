@@ -1,6 +1,6 @@
 metadataType: MVAtotal MVAref
 nMicrobes: 100
-nSubjects: 50
+nSubjects: 100
 spikeMicrobes: 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9
 effectSize: 5
 effectPos: 0.9
