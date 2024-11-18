@@ -163,7 +163,7 @@ SD2_spike_microbe_figure <- function() {
     geom_boxplot(position = position_dodge(preserve = "single")) + 
     facet_wrap(~variable, scales = 'free') + 
     theme_bw() + 
-    xlab("Proportion of associations significant") + 
+    xlab("Proportion of associations non-null") + 
     ylab('') + 
     theme(text=element_text(size=21),
           legend.position = 'right',

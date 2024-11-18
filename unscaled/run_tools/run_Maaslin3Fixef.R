@@ -169,6 +169,7 @@ if (!outputs_already_exist){
     dir.create(tmp_fit_out, recursive = T)
     
     sink('/dev/null')
+    set.seed(1)
     if(length(ID)==length(unique(ID))){
       fit_out <- maaslin3::maaslin3(input_data = abundance, 
                                    input_metadata = metadata, 

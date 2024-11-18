@@ -88,10 +88,10 @@ The `real_data_absolute_abundance` directory contains three sub-directories, one
 - A `run_scripts` folder with scripts to run the differential abundance tools on each dataset.
 - A `join_results.R` script to combine the results and create plots.
 
-## iHMP analysis
+## HMP2 analysis
 
-The `scripts` folder contains the script to perform the MetaPhlAn analysis of the iHMP data. The `results` folder contains the following:
-- A `data` folder with the taxonomic profiles, metabolomic profiles, and patient metadata. Because of its size, the metabolomics file should be separately downloaded into this folder as `intensities_hmp2.csv`.
+The `scripts` folder contains the script to perform the MetaPhlAn analysis of the HMP2 data. The `results` folder contains the following:
+- A `data` folder with the taxonomic profiles, metabolomic profiles, and patient metadata. Because of its size, the metabolomics file should be separately downloaded into this folder as `intensities_hmp2.csv`. The `pathabundances_3` files are downloaded from https://www.ibdmdb.org/.
 - A `run_scripts` folder with scripts to run each differential abundance tool
 - A `diet_associations.py` script to run MaAsLin 3 for diet associations
 - An `ibd_associations.py` script to run all differential abundance tools
@@ -107,13 +107,17 @@ python run_mpa.py -i data/hmp2_qc/ \
   --input-extension fastq.gz --bowtie metaphlan4/
 ```
 
-The following commands run the iHMP analysis.
+The following commands run the HMP2 analysis.
 ```
 python ibd_associations.py \
   -o maaslin3_benchmark/HMP2/analysis/ \
   --workingDirectory $(pwd)
 
 python diet_associations.py \
-  -omaaslin3_benchmark/HMP2/analysis_diet/ \
+  -o maaslin3_benchmark/HMP2/analysis_diet/ \
+  --workingDirectory $(pwd)
+  
+python mtx_associations.py \
+  -o maaslin3_benchmark/HMP2/analysis_mtx/ \
   --workingDirectory $(pwd)
 ```

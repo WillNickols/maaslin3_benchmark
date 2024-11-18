@@ -1029,4 +1029,4 @@ SD2_read_depth_roc_figure_maaslin3 <- function() {
     ggsave(paste0(figures_folder, 'SD2_read_depth_roc_figure_maaslin3.png'),
            plot = plot_out, width = 5, height = 5)
 }
-SD2_read_depth_roc_figure_maaslin3()
+# SD2_read_depth_roc_figure_maaslin3()

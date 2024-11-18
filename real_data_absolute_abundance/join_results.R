@@ -245,6 +245,9 @@ ggsave(paste0(figures_folder, 'abs_vs_real_all_tools.png'),
 growing_df_2 %>%
     filter(tool == "MaAsLin 3")
 
+growing_df_2%>%
+    dplyr::filter(study == "Infant gut")
+
 growing_df_2 %>%
     dplyr::filter(study != "Infant gut") %>%
     dplyr::group_by(tool, variable) %>%
@@ -274,5 +277,105 @@ taxa_table[,1] <- NULL
 taxa_table <- t(apply(taxa_table, 1, function(x) {x / sum(x)})) # Convert to relative abundance
 mean(taxa_table == 0)
 
-
+# Exploration
+# growing_df <- data.frame()
+# for (result in all_results) {
+#     fit_out_joint <- read.csv(result, sep = '\t')
+#     
+#     fit_out_joint <- fit_out_joint[!is.na(fit_out_joint$feature),]
+#     fit_out_joint$feature <- gsub('.*s__', '', fit_out_joint$feature)
+#     
+#     if (grepl('Maaslin2', result)) {
+#         fit_out_joint <- fit_out_joint[!is.na(fit_out_joint$feature),]
+#         fit_out_joint$metadata_value <- paste0(fit_out_joint$metadata, '_', fit_out_joint$value)
+#         fit_out_joint$tool <- 'Maaslin2'
+#     }
+#     
+#     if (grepl('Maaslin3', result)) {
+#         fit_out_joint <- fit_out_joint[is.na(fit_out_joint$error),]
+#         fit_out_joint$metadata_value <- paste0(fit_out_joint$metadata, '_', fit_out_joint$value)
+#         fit_out_joint$pval <- fit_out_joint$pval_joint
+#         fit_out_joint$qval <- fit_out_joint$qval_joint
+#         fit_out_joint$tool <- gsub('\\.tsv', '', gsub('.*_', '', result))
+#     }
+#     
+#     if (grepl('ANCOMBC', result)) {
+#         fit_out_joint <- fit_out_joint[!is.na(fit_out_joint$feature),]
+#         fit_out_joint <- fit_out_joint[is.na(fit_out_joint$error) | fit_out_joint$error == 'sensitivity failed',] # Allow sensitivity failed because we just care about the coefficients
+#         fit_out_joint <- fit_out_joint[!is.infinite(fit_out_joint$effect_size),]
+#         fit_out_joint$metadata_value <- paste0(fit_out_joint$metadata, "_", fit_out_joint$metadata)
+#         fit_out_joint$metadata_value[fit_out_joint$metadata_value %in% names(problematic_categoricals)] <- 
+#             problematic_categoricals[fit_out_joint$metadata_value[fit_out_joint$metadata_value %in% names(problematic_categoricals)]]
+#         fit_out_joint$tool <- 'ANCOMBC'
+#         fit_out_joint$coef <- fit_out_joint$effect_size / log(2)
+#     }
+#     
+#     if (grepl('ALDEx2', result)) {
+#         fit_out_joint <- fit_out_joint[!is.na(fit_out_joint$feature),]
+#         fit_out_joint$metadata_value <- paste0(fit_out_joint$metadata, "_", fit_out_joint$metadata)
+#         fit_out_joint$metadata_value[fit_out_joint$metadata_value %in% names(problematic_categoricals)] <- 
+#             problematic_categoricals[fit_out_joint$metadata_value[fit_out_joint$metadata_value %in% names(problematic_categoricals)]]
+#         fit_out_joint$tool <- 'ALDEx2'
+#         fit_out_joint$coef <- fit_out_joint$effect_size
+#         fit_out_joint <- fit_out_joint[!grepl('mouse', fit_out_joint$metadata_value),]
+#     }
+#     
+#     fit_out_joint <- fit_out_joint[,c('feature', 'metadata_value', 'coef', 'pval', 'qval', 'tool')]
+#     fit_out_joint$study <- gsub("real_data_absolute_abundance\\/|\\/analysis.*", "", result)
+#     
+#     growing_df <- rbind(growing_df, fit_out_joint)
+# }
+# 
+# growing_df <- growing_df[!growing_df$metadata_value %in% names_excluded,]
+# growing_df <- growing_df %>%
+#     mutate(metadata_value = case_when(metadata_value == 'age_age' ~ "Age",
+#                                       metadata_value == 'bmi_bmi' ~ "BMI",
+#                                       metadata_value == 'day_day' ~ "Day",
+#                                       metadata_value == 'Day_Day' ~ "Day",
+#                                       metadata_value == 'diagnosis_CD' ~ "CD",
+#                                       metadata_value == 'diagnosis_PSC' ~ "PSC",
+#                                       metadata_value == 'diagnosis_PSC-CD' ~ "PSC-CD",
+#                                       metadata_value == 'diagnosis_PSC-UC' ~ "PSC-UC",
+#                                       metadata_value == 'Diet_Keto' ~ "Keto Diet",
+#                                       metadata_value == 'gender_M' ~ "Male",
+#                                       metadata_value == 'BMI_BMI' ~ "BMI",
+#                                       metadata_value == 'cci_cci' ~ "CCI",
+#                                       metadata_value == 'covid_19_severity_Severe' ~ "COVID-19 Severity",))
+# 
+# growing_df_safe <- growing_df
+# 
+# growing_df <- growing_df %>%
+#     dplyr::filter(qval < 0.1)
+# 
+# new_df <- data.frame()
+# for (study in unique(growing_df$study)) {
+#     for (tool in unique(growing_df$tool)) {
+#         growing_df_tmp <- growing_df[growing_df$study == study & growing_df$tool == tool,]
+#         m3_df <- growing_df[growing_df$study == study & growing_df$tool == 'Maaslin3CompAdjust',]
+#         val <- mean(interaction(growing_df_tmp$feature, growing_df_tmp$metadata_value) %in% interaction(m3_df$feature, m3_df$metadata_value))
+#         new_df <- rbind(new_df, data.frame(tool = tool, study = study, mean = val))
+#         
+#         if (tool == 'Maaslin2') {
+#             print("M2:")
+#             print(growing_df_safe[interaction(growing_df_safe$feature, growing_df_safe$metadata_value) %in% 
+#                                          interaction(growing_df_tmp$feature, growing_df_tmp$metadata_value)[
+#                                              !interaction(growing_df_tmp$feature, growing_df_tmp$metadata_value) %in% 
+#                                                  interaction(m3_df$feature, m3_df$metadata_value)],] %>%
+#                       dplyr::group_by(tool) %>%
+#                       dplyr::summarize(mean(qval < 0.1))
+#             )
+#             
+#             print("M3:")
+#             
+#             print(growing_df_safe[interaction(growing_df_safe$feature, growing_df_safe$metadata_value) %in% 
+#                                       interaction(growing_df_tmp$feature, growing_df_tmp$metadata_value)[
+#                                           !interaction(m3_df$feature, m3_df$metadata_value) %in%
+#                                               interaction(growing_df_tmp$feature, growing_df_tmp$metadata_value)],] %>%
+#                       dplyr::group_by(tool) %>%
+#                       dplyr::summarize(mean(qval < 0.1))
+#             )
+#         }
+#     }
+# }
+# print(new_df)
 

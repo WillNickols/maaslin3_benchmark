@@ -107,16 +107,21 @@ results_df$value <- results_df$value * 100
 results_df$Data <- ifelse(results_df$iter == 'non_null', "Original", "Randomized")
 results_df <- results_df[!is.na(results_df$dataset),] # %in% included_datasets
 
-# In-text numbres
+# In-text numbers
 results_df %>%
     dplyr::filter(Data == 'Randomized') %>%
     dplyr::group_by(qval_type) %>%
     dplyr::summarise(max(value))
 
-print(results_df %>%
-    dplyr::filter(Data == 'Randomized') %>%
-    dplyr::group_by(qval_type, dataset) %>%
-    dplyr::summarise(mean(value == 0)), n = 1000)
+# print(results_df %>%
+#     dplyr::filter(Data == 'Randomized') %>%
+#     dplyr::group_by(qval_type, dataset) %>%
+#     dplyr::summarise(mean(value == 0)), n = 1000)
+
+# print(results_df %>%
+#           dplyr::filter(Data == 'Randomized') %>%
+#           dplyr::group_by(qval_type) %>%
+#           dplyr::summarise(mean(value > 0)), n = 1000)
 
 print(results_df %>%
           dplyr::filter(Data == 'Randomized') %>%
@@ -125,8 +130,16 @@ print(results_df %>%
 
 print(results_df %>%
           dplyr::filter(Data == 'Original') %>%
-          dplyr::group_by(qval_type) %>%
-          dplyr::summarise(mean(value)), n = 1000)
+          dplyr::group_by(qval_type, dataset) %>%
+          dplyr::summarise(mean(value)), n = 1000) %>%
+    dplyr::summarise(mean(`mean(value)`))
+
+# mean((results_df %>%
+#           dplyr::filter(Data == 'Original') %>%
+#           dplyr::group_by(qval_type, dataset) %>%
+#           dplyr::summarise(mean_value = mean(value)) %>%
+#           tidyr::pivot_wider(names_from = qval_type, values_from = mean_value) %>%
+#           dplyr::mutate(difference = `Prevalence Q-value` - `Abundance Q-value`))$difference)
 
 plot_out <- ggplot(results_df, aes(x = dataset, y = value, color = Data)) + 
   geom_beeswarm(cex = 0.1, size = 2.5) + 
