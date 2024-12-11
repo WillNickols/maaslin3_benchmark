@@ -58,7 +58,9 @@ plot1 <- ggplot(joined_df, aes(x = age, y = abun)) +
   geom_smooth(method = 'lm') + 
   theme_bw() + 
   xlab("Age") + 
-  ylab("Eubacterium Rectale\nRelative Abundance (%)")
+  ylab("Eubacterium rectale\nRelative Abundance (%)") + 
+    ggtitle("Pseudo-counts") + 
+    theme(title = element_text(size = 10))
 
 summary(lm(log(abun) ~ age, joined_df))
 
@@ -74,7 +76,9 @@ plot2 <- ggplot(joined_df, aes(x = age, y = abun)) +
   geom_smooth(method = 'lm') + 
   theme_bw() + 
   xlab("Age") + 
-  ylab("Eubacterium Rectale\nRelative Abundance (%)")
+  ylab("Eubacterium rectale\nRelative Abundance (%)") + 
+    ggtitle("Abundance only") + 
+    theme(title = element_text(size = 10))
 
 summary(lm(log(abun) ~ age, joined_df))
 
@@ -101,10 +105,12 @@ plot3 <- ggplot(joined_df, aes(x = age, y = abun)) +
   geom_jitter(height = 0.05, size = 0.5) + 
   theme_bw() + 
   xlab("Age") + 
-  ylab("Eubacterium Rectale\nPrevalence")
+  ylab("Eubacterium rectale\nPrevalence") + 
+  ggtitle("Prevalence only") + 
+    theme(title = element_text(size = 10))
 
 summary(glm(abun ~ age, joined_df, family = binomial))
 
-combined_plot <- grid.arrange(plot1, plot2, plot3, ncol=3)
-ggsave(combined_plot, filename = 'Figures/paper_figures/opposite_associations.png', width = 7, height = 2)
+combined_plot <- grid.arrange(plot1, plot2, plot3, ncol=3, widths = c(1,1,0.95))
+ggsave(combined_plot, filename = 'Figures/paper_figures/opposite_associations.png', width = 7, height = 2.2)
 
