@@ -2,7 +2,7 @@
 
 ## Installation
 
-The necessary packages for running the benchmarking can be installed from the `environment.yml` file. After creating a Conda environment with these packages, run the following installations:
+The necessary packages for running the benchmarking can be installed from the `environment.yml` file. After creating a Conda environment from the yml, run the following installations in R:
 
 ```
 install.packages(c('dplyr', 'pbapply', 'lmerTest', 'parallel', 'lme4', 'plyr', 'optparse', 'logging', 'data.table', 'ggplot2', 'grid', 'pheatmap'))
@@ -85,18 +85,23 @@ python randomization_test/evaluate_randomization.py \
 
 The `real_data_absolute_abundance` directory contains three sub-directories, one for each dataset. Each contains:
 - A `data` folder with the abundance data and metadata. These data were obtained from the supplementary information of each study or from the ENA nucleotide browser's display of per-sample metadata including read depth.
+- A `results` folder with the script outputs.
 - A `run_scripts` folder with scripts to run the differential abundance tools on each dataset.
-- A `join_results.R` script to combine the results and create plots.
+
+There is also a `join_results.R` script to combine the results and create plots.
 
 ## HMP2 analysis
 
-The `scripts` folder contains the script to perform the MetaPhlAn analysis of the HMP2 data. The `results` folder contains the following:
-- A `data` folder with the taxonomic profiles, metabolomic profiles, and patient metadata. Because of its size, the metabolomics file should be separately downloaded into this folder as `intensities_hmp2.csv`. The `pathabundances_3` files are downloaded from https://www.ibdmdb.org/.
+The `scripts` folder contains the script to perform the MetaPhlAn analysis of the HMP2 data. The `analysis` folder contains the following:
+- A `data` folder with the taxonomic profiles, metatranscriptomics profiles, and patient metadata. The `pathabundances_3` files are downloaded from https://www.ibdmdb.org/.
+- A `results` folder with outputs from the differential abundance tools
 - A `run_scripts` folder with scripts to run each differential abundance tool
+- An `age_associations.py` script to run MaAsLin 3 for the pediatric and adult IBD cohorts
 - A `diet_associations.py` script to run MaAsLin 3 for diet associations
 - An `ibd_associations.py` script to run all differential abundance tools
-- A `join_results.R` script to compile the taxonomic abundance (IBD and diet) results and create figures
-- A `join_results_mbx.R` script to compile the metabolomics results and create figures
+- An `mtx_associations.py` script to run all metatranscriptomics analyses
+- An `analyze_results.R` script to compile the taxonomic abundance results and create figures
+- An `opposite_associations.R` script to show an example of opposite abundance and prevalence associations from HMP2
 
 ### Running the analysis
 
@@ -109,6 +114,10 @@ python run_mpa.py -i data/hmp2_qc/ \
 
 The following commands run the HMP2 analysis.
 ```
+python age_associations.py \
+  -o maaslin3_benchmark/HMP2/analysis_age/ \
+  --workingDirectory $(pwd)
+
 python ibd_associations.py \
   -o maaslin3_benchmark/HMP2/analysis/ \
   --workingDirectory $(pwd)
