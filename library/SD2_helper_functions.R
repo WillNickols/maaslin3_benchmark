@@ -349,8 +349,7 @@ trigger_sparseDOSSA2_Simulator_groups<-function(noZeroInflate=FALSE,
   return(simlist)
 }
 
-trigger_sparseDOSSA2_Simulator_unscaled<-function(noZeroInflate=FALSE,
-                                                  RandomEffect=FALSE,
+trigger_sparseDOSSA2_Simulator_unscaled<-function(RandomEffect=FALSE,
                                                   metadataType,
                                                   nSubjects,
                                                   nPerSubject,
@@ -360,6 +359,9 @@ trigger_sparseDOSSA2_Simulator_unscaled<-function(noZeroInflate=FALSE,
                                                   effectSize,
                                                   effectPos,
                                                   readDepth = 50000,
+                                                  depthConfound,
+                                                  propAbun,
+                                                  zeroInflate,
                                                   nIterations = 100,
                                                   noParallel = FALSE,
                                                   rSeed = 1234,
@@ -410,10 +412,15 @@ trigger_sparseDOSSA2_Simulator_unscaled<-function(noZeroInflate=FALSE,
                                 effectSize,
                                 effectPos,
                                 readDepth,
+                                depthConfound,
+                                propAbun,
+                                zeroInflate,
                                 reps), 1, paste, collapse = '_')
   
   # Define the Labels to Go with Each Element of the Simulation Parameter
-  simparamslabels = c("metadataType","nSubjects", "nPerSubject", "nMicrobes", "spikeMicrobes", "nMetadata", "effectSize", "effectPos", "readDepth", "rep")
+  simparamslabels = c("metadataType","nSubjects", "nPerSubject", "nMicrobes", 
+                      "spikeMicrobes", "nMetadata", "effectSize", "effectPos", 
+                      "readDepth", "depthConfound", "propAbun", "zeroInflate", "rep")
   
   # Track Start Time
   cat(c("Job started at:",date()), "\n")
@@ -432,7 +439,7 @@ trigger_sparseDOSSA2_Simulator_unscaled<-function(noZeroInflate=FALSE,
   ###################
   
   # Call SparseDOSSA Wrapper 
-  simlist <- sparseDOSSA2_Wrapper_unscaled(simparams, simparamslabels, noZeroInflate=noZeroInflate)
+  simlist <- sparseDOSSA2_Wrapper_unscaled(simparams, simparamslabels)
   
   # Stop the Cluster 
   stopCluster(cl)
@@ -883,7 +890,7 @@ sparseDOSSA2_Wrapper_groups <- function(simparams, simparamslabels, noZeroInflat
   return(f)
 }
 
-sparseDOSSA2_Wrapper_unscaled <- function(simparams, simparamslabels, noZeroInflate){
+sparseDOSSA2_Wrapper_unscaled <- function(simparams, simparamslabels){
   args <- commandArgs(trailingOnly = FALSE)
   
   script_index <- grep("--file=", args)
@@ -895,103 +902,106 @@ sparseDOSSA2_Wrapper_unscaled <- function(simparams, simparamslabels, noZeroInfl
   this_file <- normalizePath(script_filepath)
   
   source(file.path(paste0(unlist(strsplit(this_file, "/", perl = TRUE))[1:(length(unlist(strsplit(this_file, "/", perl = TRUE))) - 3)], collapse = '/'), 'library/SD_spike.R'))
-  f<-foreach(i = simparams, .packages = c("SparseDOSSA2", "MASS", "stringi", 'plyr', 'dplyr'),
-             .export = c("generateMetadata_unscaled", "SparseDOSSA2_spike")) %dopar% {
-               
-               # Extract Parameter Strings
-               params = strsplit(i, '_')[[1]]
-               names(params) <- simparamslabels
-               
-               # Extract Relevant Parameters
-               metadataType = as.character(params["metadataType"]) # Type of Metadata
-               nSubjects <- as.numeric(params["nSubjects"])  # Number of Subjects
-               nPerSubject <- as.numeric(params["nPerSubject"])  # Number of Samples Per Subject
-               nSamples<-round(nSubjects*nPerSubject) # Number of Samples
-               nMicrobes <- as.numeric(params["nMicrobes"])  # Number of Microbes
-               spikeMicrobes <- as.numeric(params["spikeMicrobes"]) # Proportion of Spiked-in Microbes
-               nMetadata<-as.numeric(params["nMetadata"])  # Number of Metadata
-               effectSize<-as.character(params["effectSize"]) # Effect Size
-               effectPos<-as.numeric(params["effectPos"]) # Effect Size
-               readDepth<-as.numeric(params["readDepth"]) # Library Size
-               
-               # Initialize
-               DD = NULL
-               
-               # sparseDOSSA Error Control 
-               tryAgain = TRUE
-               infiniteloopcounter = 1
-               while (tryAgain & infiniteloopcounter < 5) {
-                 
-                 # Generate Metadata
-                 FF<-generateMetadata_unscaled(metadataType=metadataType, 
-                                             nSubjects=nSubjects, 
-                                             nPerSubject=nPerSubject, 
-                                             nMetadata=nMetadata)
-                 
-                 # Extract Relevant Information
-                 UserMetadata<-FF$UserMetadata; 
-                 
-                 spike_metadata_df <- data.frame(matrix(ncol = 4, nrow = 0))
-                 while (nrow(spike_metadata_df) < spikeMicrobes * nMicrobes * nMetadata) {
-                   # Multiply by 10 to allow subsetting to avoid duplication
-                   feature_spiked <- sample(paste0("Feature", 1:nMicrobes), spikeMicrobes * nMicrobes * nMetadata * 10, replace = T)
-                   metadata_datum <- sample(1:nMetadata, spikeMicrobes * nMicrobes * nMetadata * 10, replace = T)
-                   associated_property <- sample(c("abundance", "prevalence"), spikeMicrobes * nMicrobes * nMetadata * 10, replace = T)
-                   spike_metadata_df <- data.frame(metadata_datum, feature_spiked, associated_property)
-                   spike_metadata_df <- distinct(spike_metadata_df)
-                 }
-                 spike_metadata_df <- spike_metadata_df[1:floor(spikeMicrobes * nMicrobes * nMetadata),]
-                 
-                 spike_metadata_df$effect_size <- runif(nrow(spike_metadata_df), as.numeric(effectSize) * 0.5, as.numeric(effectSize)) *
-                   sample(c(1, -1), nrow(spike_metadata_df), replace = T, prob = c(effectPos, 1-effectPos))
-                 
-                 # Generate sparseDOSSA Synthetic Abundances
-                 DD<-SparseDOSSA2_spike(template="Stool",
-                                                n_sample = nSamples,
-                                                n_feature = nMicrobes,
-                                                spike_metadata = spike_metadata_df,
-                                                metadata_matrix = t(UserMetadata),
-                                                median_read_depth = readDepth,
-                                                verbose=F)
-                 
-                 if (is.null(DD) | inherits(DD, "try-error")) {
-                   tryAgain = TRUE
-                   infiniteloopcounter = infiniteloopcounter + 1
-                 } else {
-                   tryAgain = FALSE
-                 }
-               }
-               if (infiniteloopcounter >= 5) {
-                 stop("Consistent error found during simulation. Need to investigate cause.")
-               }
-               
-               sparsedossa_results <- DD$simulated_data
-               significant_features <- DD$spike_metadata$feature_metadata_spike_df
-               significant_features$metadata_datum <- paste0("Metadata_", significant_features$metadata_datum)
-               sparsedossa_metadata <- data.frame(DD$spike_metadata$metadata_matrix)
-               colnames(sparsedossa_metadata) <- paste0("Metadata_", 1:ncol(sparsedossa_metadata))
-               ID <- rep(paste('Subject', 1:nSubjects, sep=''), each = nPerSubject)
-               sparsedossa_metadata$ID <- ID
-               rownames(sparsedossa_metadata) <- paste0("Sample", 1:nrow(sparsedossa_metadata))
-               
-               if (metadataType == 'MVAtotal') {
-                 abundance_unscaled <- data.frame('total' = colSums(DD$simulated_matrices$a_spiked))
-                 rownames(abundance_unscaled) <- colnames(DD$simulated_matrices$a_spiked)
-               } else if (metadataType == 'MVAref') {
-                 abundance_unscaled <- data.frame('reference' = DD$spike_in_abs_abun)
-                 colnames(abundance_unscaled) <- rownames(sparsedossa_results)[nrow(sparsedossa_results)]
-                 rownames(abundance_unscaled) <- colnames(DD$simulated_matrices$a_spiked)
-               }
-               
-               # Return
-               return(list(metadata=sparsedossa_metadata, 
-                           features=sparsedossa_results, 
-                           truth=significant_features, 
-                           true_tax=DD$params$feature_param, 
-                           ID=ID, 
-                           libSize=colSums(sparsedossa_results),
-                           abundance_unscaled = abundance_unscaled))
-             }
+  f <- list()
+  for (i in simparams) {
+      # Extract Parameter Strings
+      params = strsplit(i, '_')[[1]]
+      names(params) <- simparamslabels
+      
+      # Extract Relevant Parameters
+      metadataType = as.character(params["metadataType"]) # Type of Metadata
+      nSubjects <- as.numeric(params["nSubjects"])  # Number of Subjects
+      nPerSubject <- as.numeric(params["nPerSubject"])  # Number of Samples Per Subject
+      nSamples<-round(nSubjects*nPerSubject) # Number of Samples
+      nMicrobes <- as.numeric(params["nMicrobes"])  # Number of Microbes
+      spikeMicrobes <- as.numeric(params["spikeMicrobes"]) # Proportion of Spiked-in Microbes
+      nMetadata<-as.numeric(params["nMetadata"])  # Number of Metadata
+      effectSize<-as.character(params["effectSize"]) # Effect Size
+      effectPos<-as.numeric(params["effectPos"]) # Effect Size
+      readDepth<-as.numeric(params["readDepth"]) # Library Size
+      depthConfound<-as.logical(params["depthConfound"])
+      propAbun<-as.numeric(params["propAbun"])
+      zeroInflate<-as.logical(params["zeroInflate"])
+      
+      # Initialize
+      DD = NULL
+      
+      # sparseDOSSA Error Control 
+      tryAgain = TRUE
+      infiniteloopcounter = 1
+      while (tryAgain & infiniteloopcounter < 5) {
+          
+          # Generate Metadata
+          FF<-generateMetadata_unscaled(metadataType=metadataType, 
+                                        nSubjects=nSubjects, 
+                                        nPerSubject=nPerSubject, 
+                                        nMetadata=nMetadata)
+          
+          # Extract Relevant Information
+          UserMetadata<-FF$UserMetadata; 
+          
+          spike_metadata_df <- data.frame(matrix(ncol = 4, nrow = 0))
+          while (nrow(spike_metadata_df) < spikeMicrobes * nMicrobes * nMetadata) {
+              # Multiply by 10 to allow subsetting to avoid duplication
+              feature_spiked <- sample(paste0("Feature", 1:nMicrobes), spikeMicrobes * nMicrobes * nMetadata * 10, replace = T)
+              metadata_datum <- sample(1:nMetadata, spikeMicrobes * nMicrobes * nMetadata * 10, replace = T)
+              associated_property <- sample(c("abundance", "prevalence"), spikeMicrobes * nMicrobes * nMetadata * 10, replace = T, prob = c(propAbun, 1 - propAbun))
+              spike_metadata_df <- data.frame(metadata_datum, feature_spiked, associated_property)
+              spike_metadata_df <- distinct(spike_metadata_df)
+          }
+          spike_metadata_df <- spike_metadata_df[1:floor(spikeMicrobes * nMicrobes * nMetadata),]
+          
+          spike_metadata_df$effect_size <- runif(nrow(spike_metadata_df), as.numeric(effectSize) * 0.5, as.numeric(effectSize)) *
+              sample(c(1, -1), nrow(spike_metadata_df), replace = T, prob = c(effectPos, 1-effectPos))
+          
+          # Generate sparseDOSSA Synthetic Abundances
+          DD<-SparseDOSSA2_spike(template="Stool",
+                                 n_sample = nSamples,
+                                 n_feature = nMicrobes,
+                                 spike_metadata = spike_metadata_df,
+                                 metadata_matrix = t(UserMetadata),
+                                 median_read_depth = readDepth,
+                                 depthConfound = depthConfound,
+                                 zeroInflate = zeroInflate,
+                                 verbose=F)
+          
+          if (is.null(DD) | inherits(DD, "try-error")) {
+              tryAgain = TRUE
+              infiniteloopcounter = infiniteloopcounter + 1
+          } else {
+              tryAgain = FALSE
+          }
+      }
+      if (infiniteloopcounter >= 5) {
+          stop("Consistent error found during simulation. Need to investigate cause.")
+      }
+      
+      sparsedossa_results <- DD$simulated_data
+      significant_features <- DD$spike_metadata$feature_metadata_spike_df
+      significant_features$metadata_datum <- paste0("Metadata_", significant_features$metadata_datum)
+      sparsedossa_metadata <- data.frame(DD$spike_metadata$metadata_matrix)
+      colnames(sparsedossa_metadata) <- paste0("Metadata_", 1:ncol(sparsedossa_metadata))
+      ID <- rep(paste('Subject', 1:nSubjects, sep=''), each = nPerSubject)
+      sparsedossa_metadata$ID <- ID
+      rownames(sparsedossa_metadata) <- paste0("Sample", 1:nrow(sparsedossa_metadata))
+      
+      if (metadataType == 'MVAtotal') {
+          abundance_unscaled <- data.frame('total' = colSums(DD$simulated_matrices$a_spiked))
+          rownames(abundance_unscaled) <- colnames(DD$simulated_matrices$a_spiked)
+      } else if (metadataType == 'MVAref') {
+          abundance_unscaled <- data.frame('reference' = DD$spike_in_abs_abun)
+          colnames(abundance_unscaled) <- rownames(sparsedossa_results)[nrow(sparsedossa_results)]
+          rownames(abundance_unscaled) <- colnames(DD$simulated_matrices$a_spiked)
+      }
+      f[[i]] <- list(metadata=sparsedossa_metadata, 
+           features=sparsedossa_results, 
+           truth=significant_features, 
+           true_tax=DD$params$feature_param, 
+           ID=ID, 
+           libSize=colSums(sparsedossa_results),
+           abundance_unscaled = abundance_unscaled)
+  }
+
   return(f)
 }
 

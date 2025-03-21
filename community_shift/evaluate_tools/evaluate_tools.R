@@ -48,6 +48,9 @@ SD2_spike_microbe_figure <- function() {
         tmp_param_file['nMetadata'] <- '1'
         tmp_param_file['nPerSubject'] <- '1'
       }
+      if (tmp_param_file['depthConfound'] == 'TRUE'){
+          tmp_param_file['nMetadata'] = '1'
+      }
       param_list_final <- c(param_list_final, list(tmp_param_file))
     }
   }
@@ -56,7 +59,8 @@ SD2_spike_microbe_figure <- function() {
   param_name <- "spikeMicrobes"
   
   general_results_df <- data.frame(matrix(nrow = 0, ncol = 0))
-  metrics <- c("Effect size mean diff", "Effect size correlation")
+  metrics <- c("Precision", "Recall",
+               "Effect size mean diff", "Effect size correlation")
   for (param_list in param_list_final[c(2, 4, 6, 8, 10, 12, 14, 16, 18)]) {
     print(param_list)
     if (param_list[['nPerSubject']]!='1'){
@@ -76,6 +80,9 @@ SD2_spike_microbe_figure <- function() {
                        param_list[['effectSize']], 
                        param_list[['effectPos']], 
                        param_list[['readDepth']], 
+                       param_list[['depthConfound']],
+                       param_list[['propAbun']],
+                       param_list[['zeroInflate']],
                        sep='_')
     options("scipen"=5)
     
@@ -108,8 +115,10 @@ SD2_spike_microbe_figure <- function() {
         
         if(inherits(possible_error, "error")) next
         
-        new_row <- c(effect_size_mean_diff(truth, prepare_associations_abundance(associations, tool, generator)),
+        new_row <- c(unweighted_precision_recall(truth, prepare_associations_general(associations, tool, generator), abundance, metadata),
+                     effect_size_mean_diff(truth, prepare_associations_abundance(associations, tool, generator)),
                      effect_size_correlation(truth, prepare_associations_abundance(associations, tool, generator)))
+
         new_row <- lapply(new_row, function(x) {x})
         names(new_row) <- metrics
         
@@ -136,22 +145,31 @@ SD2_spike_microbe_figure <- function() {
   melted_df <- melt(results_subset, id.vars = c('tool', 'iter', param_name))
   melted_df[,param_name] <- factor(melted_df[,param_name], levels = as.character(sort(unique(as.numeric(melted_df[,param_name])))))
   melted_df <- melted_df[melted_df$variable != "Issue proportion",]
-  melted_df$variable <- case_when(melted_df$variable == 'Effect size mean diff' ~ 'Effect size bias',
-                                  melted_df$variable == "Effect size correlation" ~ "Effect size correlation")
-  melted_df$variable <- factor(melted_df$variable, levels = c('Effect size bias', 
+  melted_df$variable <- case_when(melted_df$variable == 'Precision' ~ 'Precision',
+                                  melted_df$variable == 'Recall' ~ 'Recall',
+                                  melted_df$variable == 'Effect size mean diff' ~ 'Effect size bias',
+                                  melted_df$variable == 'Effect size correlation' ~ 'Effect size correlation')
+  melted_df$variable <- factor(melted_df$variable, levels = c('Precision', 
+                                                              'Recall',
+                                                              'Effect size bias', 
                                                               'Effect size correlation'))
   melted_df <- melted_df[!is.na(melted_df$variable),]
   melted_df$tool <- case_when(melted_df$tool == 'ALDEx2' ~ 'ALDEx2',
+                              melted_df$tool == 'ALDEx2_scale' ~ 'ALDEx2\n(scale informed)',
                               melted_df$tool == 'ANCOMBC' ~ 'ANCOM-BC2',
+                              melted_df$tool == 'DESeq2' ~ 'DESeq2',
+                              melted_df$tool == 'edgeR' ~ 'edgeR',
                               melted_df$tool == 'Maaslin2' ~ 'MaAsLin 2',
                               melted_df$tool == 'Maaslin3CompAdjust' ~ 'MaAsLin 3',
                               melted_df$tool == 'Maaslin3unscaled' ~ 'MaAsLin 3\n(Spike-in)')
-  melted_df$tool <- factor(melted_df$tool, levels = c("ALDEx2", "ANCOM-BC2", "MaAsLin 2", "MaAsLin 3", "MaAsLin 3\n(Spike-in)"))
+  melted_df$tool <- factor(melted_df$tool, 
+    levels = c("ALDEx2", 'ALDEx2\n(scale informed)', "ANCOM-BC2", 'DESeq2', 
+               'edgeR', "MaAsLin 2", "MaAsLin 3", "MaAsLin 3\n(Spike-in)"))
   melted_df <- melted_df[!is.na(melted_df$tool),]
   
   # Make plotting dimensions reasonable
   melted_df <- melted_df[!is.na(melted_df$value) & melted_df$value < 5 & melted_df$value > -6,]
-  melted_df <- melted_df[melted_df$spikeMicrobes %in% c("0.1", "0.3", "0.5", "0.7", "0.9"),]
+  d <- melted_df[melted_df$spikeMicrobes %in% c("0.1", "0.3", "0.5", "0.7", "0.9"),]
   
   # In-text numbers
   melted_df %>%
@@ -169,9 +187,29 @@ SD2_spike_microbe_figure <- function() {
           legend.position = 'right',
           strip.background = element_rect(fill = "gray95")) + 
     labs(fill = 'Model') + 
-    scale_fill_manual(values=c("#104E8B", "#458B00", "#EEAD0E", "#68228B", "#8B1A1A"),
-                      breaks=c("ALDEx2", "ANCOM-BC2", "MaAsLin 2", "MaAsLin 3", "MaAsLin 3\n(Spike-in)"))
+    scale_fill_manual(values=c("#104E8B", "#5B9BD5", "#458B00", "darkgray", "lightgray", "#EEAD0E", "#68228B", "#8B1A1A"),
+                      breaks=c("ALDEx2", 'ALDEx2\n(scale informed)', "ANCOM-BC2", 'DESeq2', 
+                               'edgeR', "MaAsLin 2", "MaAsLin 3", "MaAsLin 3\n(Spike-in)"))
+  ggsave(paste0(figures_folder, 'SD2_spike_microbe_figure_sup.png'),
+         plot = plot_out, width = 14, height = 8)
+  
+  
+  plot_out <- ggplot(melted_df %>% filter(grepl('MaAsLin|ALDEx|ANCOM', tool) & 
+                    spikeMicrobes %in% seq(0.1, 0.9, 0.2)), 
+                     aes(x = get(param_name), y = value, fill = tool)) + 
+      geom_boxplot(position = position_dodge(preserve = "single")) + 
+      facet_wrap(~variable, scales = 'free', ncol = 4) + 
+      theme_bw() + 
+      xlab("Proportion of associations non-null") + 
+      ylab('') + 
+      theme(text=element_text(size=21),
+            legend.position = 'right',
+            strip.background = element_rect(fill = "gray95")) + 
+      labs(fill = 'Model') + 
+      scale_fill_manual(values=c("#104E8B", "#5B9BD5", "#458B00", "darkgray", "lightgray", "#EEAD0E", "#68228B", "#8B1A1A"),
+                        breaks=c("ALDEx2", 'ALDEx2\n(scale informed)', "ANCOM-BC2", 'DESeq2', 
+                                 'edgeR', "MaAsLin 2", "MaAsLin 3", "MaAsLin 3\n(Spike-in)"))
   ggsave(paste0(figures_folder, 'SD2_spike_microbe_figure.png'),
-         plot = plot_out, width = 10, height = 4)
+         plot = plot_out, width = 16, height = 4)
 }
 SD2_spike_microbe_figure()

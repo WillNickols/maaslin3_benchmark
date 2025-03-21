@@ -39,6 +39,15 @@ option_list = list(
     c("-q", "--readDepth"), default=500000, # q stands for quantity and quality of sequencing depth or library size
     type = "integer"),
   make_option(
+      c("--depthConfound"), default=FALSE,
+      type = "logical"),
+  make_option(
+      c("--propAbun"), default=0.5,
+      type = "numeric"),
+  make_option(
+      c("--zeroInflate"), default=TRUE,
+      type = "logical"),
+  make_option(
     c("-g", "--noParallel"), default=FALSE, # g stands for grid
     action = "store_true"),
   make_option(
@@ -69,6 +78,9 @@ nMetadata<- opt$options$nMetadata # Low-level parameter
 effectSize<- opt$options$effectSize # Low-level parameter
 effectPos<- opt$options$effectPos # Low-level parameter
 readDepth<- opt$options$readDepth # Default parameter
+depthConfound<- opt$options$depthConfound
+propAbun<- opt$options$propAbun
+zeroInflate<- opt$options$zeroInflate
 noParallel<-opt$options$noParallel # Default parameter
 nIterations<- opt$options$nIterations # Default parameter
 rSeed<- opt$options$rSeed # Default parameter
@@ -88,7 +100,9 @@ if (RandomEffect==TRUE){
 }
 
 options("scipen"=10)
-inputString<-paste(inputSubString, metadataType, nSubjects, nPerSubject, nMicrobes, spikeMicrobes, nMetadata, effectSize, effectPos, readDepth, sep='_')
+inputString<-paste(inputSubString, metadataType, nSubjects, nPerSubject, 
+                   nMicrobes, spikeMicrobes, nMetadata, effectSize, effectPos, 
+                   readDepth, depthConfound, propAbun, zeroInflate, sep='_')
 options("scipen"=5)
 
 # Create Input Directory
@@ -180,13 +194,18 @@ if (!outputs_already_exist){
     
     sink('/dev/null')
     set.seed(1)
+    if(depthConfound) {
+        fixed_effects <- colnames(metadata)[!colnames(metadata) %in% c("ID")]
+    } else {
+        fixed_effects <- colnames(metadata)[!colnames(metadata) %in% c("ID", "read_depth")]
+    }
     if(length(ID)==length(unique(ID))){
       fit_out <- maaslin3::maaslin3(input_data = abundance, 
                          input_metadata = metadata, 
                          output = tmp_fit_out, 
                          normalization = 'TSS', 
                          transform = 'LOG',
-                         fixed_effects = colnames(metadata)[!colnames(metadata) %in% c("ID", "read_depth")], 
+                         fixed_effects = fixed_effects, 
                          median_comparison_abundance = F, 
                          median_comparison_prevalence = F,
                          plot_summary_plot = F, 
@@ -199,8 +218,9 @@ if (!outputs_already_exist){
                          output = tmp_fit_out, 
                          normalization = 'TSS', 
                          transform = 'LOG',
-                         fixed_effects = colnames(metadata)[!colnames(metadata) %in% c("ID", "read_depth")],
+                         fixed_effects = fixed_effects,
                          random_effects = "ID", 
+                         small_random_effects = nPerSubject <5,
                          median_comparison_abundance = F, 
                          median_comparison_prevalence = F,
                          plot_summary_plot = F, 

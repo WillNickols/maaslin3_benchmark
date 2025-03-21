@@ -39,6 +39,15 @@ option_list = list(
     c("-q", "--readDepth"), default=500000, # q stands for quantity and quality of sequencing depth or library size
     type = "integer"),
   make_option(
+      c("--depthConfound"), default=FALSE,
+      type = "logical"),
+  make_option(
+      c("--propAbun"), default=0.5,
+      type = "numeric"),
+  make_option(
+      c("--zeroInflate"), default=TRUE,
+      type = "logical"),
+  make_option(
     c("-g", "--noParallel"), default=FALSE, # g stands for grid
     action = "store_true"),
   make_option(
@@ -69,6 +78,9 @@ nMetadata<- opt$options$nMetadata # Low-level parameter
 effectSize<- opt$options$effectSize # Low-level parameter
 effectPos<- opt$options$effectPos # Low-level parameter
 readDepth<- opt$options$readDepth # Default parameter
+depthConfound<- opt$options$depthConfound
+propAbun<- opt$options$propAbun
+zeroInflate<- opt$options$zeroInflate
 noParallel<-opt$options$noParallel # Default parameter
 nIterations<- opt$options$nIterations # Default parameter
 rSeed<- opt$options$rSeed # Default parameter
@@ -83,7 +95,9 @@ if (RandomEffect==TRUE){
 }
 
 options("scipen"=10)
-inputString<-paste(inputSubString, metadataType, nSubjects, nPerSubject, nMicrobes, spikeMicrobes, nMetadata, effectSize, effectPos, readDepth, sep='_')
+inputString<-paste(inputSubString, metadataType, nSubjects, nPerSubject, 
+                   nMicrobes, spikeMicrobes, nMetadata, effectSize, effectPos, 
+                   readDepth, depthConfound, propAbun, zeroInflate, sep='_')
 options("scipen"=5)
 
 # Create Input Directory
@@ -164,20 +178,26 @@ if (!outputs_already_exist){
       ID <- rownames(metadata)
     }
     
+    if(depthConfound) {
+        fixed_effects <- colnames(metadata)[!colnames(metadata) %in% c("ID")]
+    } else {
+        fixed_effects <- colnames(metadata)[!colnames(metadata) %in% c("ID", "read_depth")]
+    }
+    
     sink('/dev/null')
     if ('ID' %in% colnames(metadata) & length(unique(metadata$ID)) != length(metadata$ID)) {
       mm <- model.matrix(formula(paste0("~ ", 
-                                        paste0(colnames(metadata)[!colnames(metadata) %in% c("read_depth")], 
+                                        paste0(c(fixed_effects, "ID"), 
                                                collapse = " + "), 
                                         collapse = "")),metadata)
     } else {
       mm <- model.matrix(formula(paste0("~ ", 
-                                        paste0(colnames(metadata)[!colnames(metadata) %in% c("ID", "read_depth")], 
+                                        paste0(fixed_effects, 
                                                collapse = " + "), 
                                         collapse = "")),metadata)
     }
     
-    aldex_clr_out <- aldex.clr(abundance, mm, denom="all")
+    aldex_clr_out <- aldex.clr(abundance, mm, denom="all", gamma = 0.5)
     glm.test <- aldex.glm(aldex_clr_out)
     
     glm.test <- glm.test[,grepl("Est$|pval$", colnames(glm.test))]

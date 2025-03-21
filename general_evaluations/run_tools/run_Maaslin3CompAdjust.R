@@ -167,11 +167,7 @@ if (!outputs_already_exist){
     tmp_fit_out <- paste0(this_output_folder, "/tmp_out_", i)
     dir.create(tmp_fit_out, recursive = T)
     
-    if(generator == 'SD2') {
-        fixed_effects <- colnames(metadata)[!colnames(metadata) %in% c("ID", "read_depth")]
-    } else {
-        fixed_effects <- colnames(metadata)[!colnames(metadata) %in% c("ID", "read_depth")]
-    }
+    fixed_effects <- colnames(metadata)[!colnames(metadata) %in% c("ID", "read_depth")]
     
     sink('/dev/null')
     if(length(ID)==length(unique(ID))){

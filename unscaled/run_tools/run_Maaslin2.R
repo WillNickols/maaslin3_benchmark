@@ -39,6 +39,15 @@ option_list = list(
     c("-q", "--readDepth"), default=500000, # q stands for quantity and quality of sequencing depth or library size
     type = "integer"),
   make_option(
+      c("--depthConfound"), default=FALSE,
+      type = "logical"),
+  make_option(
+      c("--propAbun"), default=0.5,
+      type = "numeric"),
+  make_option(
+      c("--zeroInflate"), default=TRUE,
+      type = "logical"),
+  make_option(
     c("-g", "--noParallel"), default=FALSE, # g stands for grid
     action = "store_true"),
   make_option(
@@ -69,6 +78,9 @@ nMetadata<- opt$options$nMetadata # Low-level parameter
 effectSize<- opt$options$effectSize # Low-level parameter
 effectPos<- opt$options$effectPos # Low-level parameter
 readDepth<- opt$options$readDepth # Default parameter
+depthConfound<- opt$options$depthConfound
+propAbun<- opt$options$propAbun
+zeroInflate<- opt$options$zeroInflate
 noParallel<-opt$options$noParallel # Default parameter
 nIterations<- opt$options$nIterations # Default parameter
 rSeed<- opt$options$rSeed # Default parameter
@@ -83,7 +95,9 @@ if (RandomEffect==TRUE){
 }
 
 options("scipen"=10)
-inputString<-paste(inputSubString, metadataType, nSubjects, nPerSubject, nMicrobes, spikeMicrobes, nMetadata, effectSize, effectPos, readDepth, sep='_')
+inputString<-paste(inputSubString, metadataType, nSubjects, nPerSubject, 
+                   nMicrobes, spikeMicrobes, nMetadata, effectSize, effectPos, 
+                   readDepth, depthConfound, propAbun, zeroInflate, sep='_')
 options("scipen"=5)
 
 # Create Input Directory
@@ -168,15 +182,20 @@ if (!outputs_already_exist){
     dir.create(tmp_fit_out, recursive = T)
     
     sink('/dev/null')
+    if(depthConfound) {
+        fixed_effects <- colnames(metadata)[!colnames(metadata) %in% c("ID")]
+    } else {
+        fixed_effects <- colnames(metadata)[!colnames(metadata) %in% c("ID", "read_depth")]
+    }
     if(length(ID)==length(unique(ID))){
       fit_out <- Maaslin2::Maaslin2(abundance, metadata, min_abundance = 0, min_prevalence = 0, output = tmp_fit_out, 
                                     min_variance = 0, normalization = 'TSS', transform = 'LOG', analysis_method = 'LM', 
-                                    fixed_effects = colnames(metadata)[!colnames(metadata) %in% c("ID", "read_depth")], save_scatter = FALSE, 
+                                    fixed_effects = fixed_effects, save_scatter = FALSE, 
                                     save_models = F, plot_heatmap = F, plot_scatter = F, max_significance = 0.1)$results
     } else{
       fit_out <- Maaslin2::Maaslin2(abundance, metadata, min_abundance = 0, min_prevalence = 0, output = tmp_fit_out, 
                                     min_variance = 0, normalization = 'TSS', transform = 'log', analysis_method = 'LM', 
-                                    random_effects = "ID", fixed_effects = colnames(metadata)[!colnames(metadata) %in% c("ID", "read_depth")], 
+                                    random_effects = "ID", fixed_effects = fixed_effects,
                                     save_scatter = FALSE, save_models = F, plot_heatmap = F, plot_scatter = F,
                                     max_significance = 0.1)$results
     }

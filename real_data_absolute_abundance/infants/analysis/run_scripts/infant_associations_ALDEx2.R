@@ -47,7 +47,7 @@ taxa_table_in <- t(taxa_table_in)
 taxa_table_in <- taxa_table_in[rownames(taxa_table_in) %in% rownames(mm),]
 taxa_table_in <- t(taxa_table_in)
 
-aldex_clr_out <- aldex.clr(taxa_table_in, mm, denom="all", useMC = F)
+aldex_clr_out <- aldex.clr(taxa_table_in, mm, denom="all", useMC = F, gamma = 0.5)
 glm.test <- aldex.glm(aldex_clr_out, verbose = T)
 
 glm.test <- glm.test[,grepl("Est$|pval$", colnames(glm.test))]

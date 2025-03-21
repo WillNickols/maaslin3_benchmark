@@ -37,3 +37,6 @@ HMP2/analysis/data/HMDB_chemical_taxonomy.csv
 HMP2/analysis/data/intensities_hmp2.csv
 HMP2/analysis/data/mbx_table_halla.tsv
 HMP2/analysis/data/taxa_table_halla.tsv
+/general_evaluations/data_generation/simseq_templates
+general_evaluations/data_generation/SimSeq_determine_datasets.R
+/general_evaluations/data_generation/simseq_templates

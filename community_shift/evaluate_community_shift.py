@@ -2,6 +2,7 @@ from anadama2 import Workflow
 import os
 import itertools
 import copy
+import re
 
 workflow = Workflow(version="0.1", description="Evaluate community_shift")
 workflow.add_argument("cores", desc="The number of CPU cores allocated to the job", type=int, default=4)
@@ -13,7 +14,7 @@ args = workflow.parse_args()
 this_directory = str(os.path.dirname(os.path.realpath(__file__))).rstrip('/') + '/'
 
 # output, set this to the GitHub repository
-output = os.path.abspath(args.output.rstrip("community_shift/")) + "/"
+output = os.path.abspath(args.output.removesuffix("community_shift/")) + "/"
 if not os.path.isdir(output):
 	os.makedirs(output)
 
@@ -79,6 +80,8 @@ def compute_generation_outputs(generator):
             if metadata_type == 'binary':
                 new_param_dict['nMetadata'] = str(1)
                 new_param_dict['nPerSubject'] = str(1)
+            if new_param_dict['depthConfound'] == 'TRUE':
+                new_param_dict['nMetadata'] = str(1)
             param_list_final.append(new_param_dict)
 
     param_list_final = set([frozenset(param_single_final.items()) for param_single_final in param_list_final])
@@ -94,7 +97,8 @@ def compute_generation_outputs(generator):
 
         new_depends_folder = output + 'Input/community_shift/' + generator + '/' + '_'.join([inputSubString, 
         param['metadataType'], param['nSubjects'], param['nPerSubject'], param['nMicrobes'], 
-        param['spikeMicrobes'], param['nMetadata'], param['effectSize'], param['effectPos'], param['readDepth']]) + '/'
+        param['spikeMicrobes'], param['nMetadata'], param['effectSize'], param['effectPos'], 
+        param['readDepth'], param['depthConfound'], param['propAbun'], param['zeroInflate']]) + '/'
 
         generation_outputs.extend([new_depends_folder + file_type + '_' + str(file_number) + '.tsv' for file_type, file_number in list(itertools.product(['metadata', 'abundance', 'truth', 'unscaled'], [i for i in range(1, nIterations + 1)]))])
 
@@ -123,7 +127,7 @@ run_tools_directory = this_directory + 'run_tools/'
 working_directory = output
 
 def compute_running_outputs(generator, tool, param):
-    tool = tool.rstrip('.R').lstrip('run_')
+    tool = tool.removesuffix('.R').removeprefix('run_')
     if args.tmp:
         nIterations = 5
     else:
@@ -136,7 +140,8 @@ def compute_running_outputs(generator, tool, param):
 
     new_depends_folder = output + 'Output/community_shift/' + generator + '/' + '_'.join([inputSubString, 
     param['metadataType'], param['nSubjects'], param['nPerSubject'], param['nMicrobes'], 
-    param['spikeMicrobes'], param['nMetadata'], param['effectSize'], param['effectPos'], param['readDepth'], tool]) + '/'
+    param['spikeMicrobes'], param['nMetadata'], param['effectSize'], param['effectPos'], 
+    param['readDepth'], param['depthConfound'], param['propAbun'], param['zeroInflate'], tool]) + '/'
 
     generation_outputs = [new_depends_folder + 'associations_' + str(file_number) + '.tsv' for file_number in [i for i in range(1, nIterations + 1)]]
 
@@ -177,6 +182,8 @@ for generator in param_dict['generators']:
             if metadata_type == 'binary':
                 new_param_dict['nMetadata'] = str(1)
                 new_param_dict['nPerSubject'] = str(1)
+            if new_param_dict['depthConfound'] == 'TRUE':
+                new_param_dict['nMetadata'] = str(1)
             param_list_final.append(new_param_dict)
 
     param_list_final = set([frozenset(param_single_final.items()) for param_single_final in param_list_final])
@@ -201,6 +208,9 @@ for generator in param_dict['generators']:
             ' --effectSize ' + param['effectSize'] + \
             ' --effectPos ' + param['effectPos'] + \
             ' --readDepth ' + param['readDepth'] + \
+            ' --depthConfound ' + param['depthConfound'] + \
+            ' --propAbun ' + param['propAbun'] + \
+            ' --zeroInflate ' + param['zeroInflate'] + \
             ' --nCores ' + str(cores) + \
             ' --workingDirectory ' + working_directory + \
             ' --generator ' + generator

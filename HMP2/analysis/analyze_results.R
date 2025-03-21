@@ -123,6 +123,9 @@ HMP2_upset_plot_v4 <- function() {
                                                grepl("dysbiosis", growing_df$metadata_value)]) %in% 
                 growing_df$association[growing_df$tool == 'MaAsLin 3 Median\nAdjusted']))
   
+  # D. welbionis
+  print(growing_df[grepl("SGB15078", growing_df$feature),])
+  
   listInput <- list(`MaAsLin 2` = unique(growing_df$association[growing_df$tool == 'Maaslin2']), 
        `MaAsLin 3` = unique(growing_df$association[growing_df$tool == 'MaAsLin 3 Median\nAdjusted']), 
        `ANCOM-BC2` = unique(growing_df$association[growing_df$tool == 'ANCOMBC']),
@@ -318,144 +321,6 @@ process_taxa_table_and_metadata <- function(taxa_table, metadata) {
 }
 
 # Diet associations
-diet_associations_plot_v4 <- function() {
-  hmp2_files <- list.files('HMP2/analysis/results/', full.names = T)
-  hmp2_files <- hmp2_files[grepl('food_associations', hmp2_files) & grepl('v4', hmp2_files)]
-  
-  growing_df <- data.frame()
-  for (hmp2_file in hmp2_files) {
-    in_data <- read.csv(hmp2_file, sep='\t')
-    in_data <- in_data[in_data$metadata == 'food_group',]
-    in_data$food_group <- gsub('.*food_associations_|\\.tsv', '', hmp2_file)
-    in_data$variable_type <- gsub('.*\\/v[0-9]_|_food_associations_.*', '', hmp2_file)
-    growing_df <- rbind(growing_df, in_data)
-  }
-  
-  signif_level <- 0.1
-  
-  signif_subset <- growing_df[!is.na(growing_df$qval_individual) & 
-               growing_df$qval_individual < signif_level & 
-               is.na(growing_df$error),]
-  
-  signif_subset <- signif_subset[order(signif_subset$qval_individual),]
-  signif_subset <- signif_subset[signif_subset$N_not_zero > 0.1 * signif_subset$N,]
-  
-  all_combinations <- expand.grid(food_group = unique(signif_subset$food_group), 
-                                  variable_type = unique(signif_subset$variable_type))
-  
-  ordered_assoc <- paste0(signif_subset$feature, "_", signif_subset$food_group)[
-      signif_subset$variable_type == 'ordered']
-  group_assoc <- paste0(signif_subset$feature, "_", signif_subset$food_group)[
-      signif_subset$variable_type == 'group']
-  ordered_assoc <- unique(ordered_assoc)
-  
-  # Overlap in group and ordered predictors
-  print(mean(ordered_assoc %in% group_assoc))
-  print(mean(group_assoc %in% ordered_assoc))
-  print(sum(ordered_assoc %in% group_assoc))
-  print(length(ordered_assoc))
-  print(sum(group_assoc %in% ordered_assoc))
-  print(length(group_assoc))
-  
-  growing_df[grepl('Roseburia_faecis', growing_df$feature) & growing_df$food_group == 'alcohol',]
-  
-  plot_df <- signif_subset %>%
-    group_by(food_group, variable_type) %>%
-    dplyr::summarize(count = n(), .groups = 'drop') %>%
-    right_join(all_combinations, by = c("food_group", "variable_type")) %>%
-    replace(is.na(.), 0)
-  
-  plot_df$food_group <- gsub("_", " ", str_to_title(plot_df$food_group))
-  plot_df$food_group <- factor(plot_df$food_group, 
-                               levels = unique(plot_df$food_group[order(plot_df$count, decreasing = T)]))
-  plot_df <- plot_df %>% 
-    mutate(variable_type = case_when(variable_type == 'group' ~ 'Group predictor',
-                                     variable_type == 'ordered' ~ 'Ordered predictor'))
-  
-  growing_df[grepl("s__Roseburia_faecis", growing_df$feature) & growing_df$food_group == 'alcohol',]
-  
-  plot_out <- ggplot(plot_df, aes(x = food_group, y = count, fill = variable_type)) + 
-    geom_bar(position="dodge", stat="identity") + 
-    theme_bw() + 
-    ylab("Significant associations") + 
-    xlab(NULL) + 
-    scale_fill_manual(values = brewer.pal(12, "Paired")[9:10]) + 
-    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1),
-          text = element_text(size = 16)) + 
-    labs(fill = '')
-  ggsave(plot = plot_out, filename = paste0(figures_folder, 'HMP2_diet_v4.png'), width = 12, height = 4)
-}
-diet_associations_plot_v4()
-
-diet_associations_plot_v3 <- function() {
-    hmp2_files <- list.files('HMP2/analysis/results/', full.names = T)
-    hmp2_files <- hmp2_files[grepl('food_associations', hmp2_files) & grepl('v3', hmp2_files)]
-    
-    growing_df <- data.frame()
-    for (hmp2_file in hmp2_files) {
-        in_data <- read.csv(hmp2_file, sep='\t')
-        in_data <- in_data[in_data$metadata == 'food_group',]
-        in_data$food_group <- gsub('.*food_associations_|\\.tsv', '', hmp2_file)
-        in_data$variable_type <- gsub('.*\\/v[0-9]_|_food_associations_.*', '', hmp2_file)
-        growing_df <- rbind(growing_df, in_data)
-    }
-    
-    signif_level <- 0.1
-    
-    signif_subset <- growing_df[!is.na(growing_df$qval_individual) & 
-                                    growing_df$qval_individual < signif_level & 
-                                    is.na(growing_df$error),]
-    
-    signif_subset <- signif_subset[order(signif_subset$qval_individual),]
-    signif_subset <- signif_subset[signif_subset$N_not_zero > 0.1 * signif_subset$N,]
-    
-    all_combinations <- expand.grid(food_group = unique(signif_subset$food_group), 
-                                    variable_type = unique(signif_subset$variable_type))
-    
-    ordered_assoc <- paste0(signif_subset$feature, "_", signif_subset$food_group)[
-        signif_subset$variable_type == 'ordered']
-    group_assoc <- paste0(signif_subset$feature, "_", signif_subset$food_group)[
-        signif_subset$variable_type == 'group']
-    ordered_assoc <- unique(ordered_assoc)
-    
-    # Overlap in group and ordered predictors
-    print(mean(ordered_assoc %in% group_assoc))
-    print(mean(group_assoc %in% ordered_assoc))
-    print(sum(ordered_assoc %in% group_assoc))
-    print(length(ordered_assoc))
-    print(sum(group_assoc %in% ordered_assoc))
-    print(length(group_assoc))
-    
-    growing_df[grepl('Roseburia_faecis', growing_df$feature) & growing_df$food_group == 'alcohol',]
-    
-    plot_df <- signif_subset %>%
-        group_by(food_group, variable_type) %>%
-        dplyr::summarize(count = n(), .groups = 'drop') %>%
-        right_join(all_combinations, by = c("food_group", "variable_type")) %>%
-        replace(is.na(.), 0)
-    
-    plot_df$food_group <- gsub("_", " ", str_to_title(plot_df$food_group))
-    plot_df$food_group <- factor(plot_df$food_group, 
-                                 levels = unique(plot_df$food_group[order(plot_df$count, decreasing = T)]))
-    plot_df <- plot_df %>% 
-        mutate(variable_type = case_when(variable_type == 'group' ~ 'Group predictor',
-                                         variable_type == 'ordered' ~ 'Ordered predictor'))
-    
-    growing_df[grepl("s__Roseburia_faecis", growing_df$feature) & growing_df$food_group == 'alcohol',]
-    
-    plot_out <- ggplot(plot_df, aes(x = food_group, y = count, fill = variable_type)) + 
-        geom_bar(position="dodge", stat="identity") + 
-        theme_bw() + 
-        ylab("Significant associations") + 
-        xlab(NULL) + 
-        scale_fill_manual(values = brewer.pal(12, "Paired")[9:10]) + 
-        theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1),
-              text = element_text(size = 16)) + 
-        labs(fill = '')
-    ggsave(plot = plot_out, filename = paste0(figures_folder, 'HMP2_diet_v3.png'), width = 12, height = 4)
-}
-diet_associations_plot_v3()
-
 diet_associations_joint <- function() {
     hmp2_files <- list.files('HMP2/analysis/results/', full.names = T)
     hmp2_files <- hmp2_files[grepl('food_associations', hmp2_files) & grepl('v4', hmp2_files)]
@@ -470,7 +335,7 @@ diet_associations_joint <- function() {
     }
     
     v4_results <- growing_df
-    v4_results$feature <- gsub(".*\\.s__|\\.t__.*", "", v4_results$feature)
+    v4_results$feature <- gsub(".*\\|s__|\\|t__.*", "", v4_results$feature)
     
     hmp2_files <- list.files('HMP2/analysis/results/', full.names = T)
     hmp2_files <- hmp2_files[grepl('food_associations', hmp2_files) & grepl('v3', hmp2_files)]
@@ -484,7 +349,7 @@ diet_associations_joint <- function() {
         growing_df <- rbind(growing_df, in_data)
     }
     
-    growing_df$feature <- gsub(".*\\.s__|\\.t__.*", "", growing_df$feature)
+    growing_df$feature <- gsub(".*\\|s__|\\|t__.*", "", growing_df$feature)
     
     joined_results <- full_join(v4_results, growing_df, c("feature", "metadata", "value", "association", "food_group", "variable_type"))
     
@@ -590,7 +455,7 @@ dysosmobacter_welbionis_plot <- function() {
 
     associations_in <- read.csv("HMP2/analysis/results/v4_ibd_associations_Maaslin3CompAdjust.tsv", sep = '\t')
     associations_in <- associations_in %>%
-        filter(feature == 'k__Bacteria.p__Firmicutes.c__Clostridia.o__Eubacteriales.f__Oscillospiraceae.g__Dysosmobacter.s__Dysosmobacter_welbionis.t__SGB15078',
+        filter(feature == 'k__Bacteria|p__Firmicutes|c__Clostridia|o__Eubacteriales|f__Oscillospiraceae|g__Dysosmobacter|s__Dysosmobacter_welbionis|t__SGB15078',
                metadata %in% c("dysbiosis_state", "diagnosis"))
     signif_df <- data.frame(group1 = case_when(associations_in$value == 'CD' ~ 'non-IBD',
                                                associations_in$value == 'UC' ~ 'non-IBD',
@@ -623,7 +488,12 @@ dysosmobacter_welbionis_plot <- function() {
         theme(axis.title.y = element_blank(), 
               axis.text.y = element_blank()) + 
         labs(y = 'Relative abundance') + 
-        scale_y_continuous(trans = 'log', breaks = 10^c(-6, -4, -2, 0), limits = c(10^-6, 10^2)) + 
+        scale_y_continuous(
+            trans = 'log', 
+            breaks = 10^c(-6, -4, -2, 0), 
+            limits = c(10^-6, 10^2), 
+            labels = scales::trans_format("log10", scales::math_format(10^.x))
+        ) + 
         coord_flip()
     
     metadata_expanded <- metadata_expanded %>%
@@ -704,7 +574,7 @@ in_text_vals <- function() {
     all_results_under16 <- all_results_under16 %>%
         filter(!is.na(metadata) & metadata %in% c('dysbiosis_state', 'diagnosis')) %>%
         filter((qval_individual.x < 0.1 & abs(coef.x) > 1) | (qval_individual.y < 0.1 & abs(coef.y) > 1)) %>%
-        mutate(feature = gsub('.*\\.s__', '', feature)) %>%
+        mutate(feature = gsub('.*\\|s__', '', feature)) %>%
         filter(!is.na(feature)) %>%
         mutate(association_direction = case_when(qval_individual.x < 0.1 & (qval_individual.y > 0.1 | is.na(qval_individual.y)) & coef.x > 0 ~ "increased",
                                                  qval_individual.x < 0.1 & (qval_individual.y > 0.1 | is.na(qval_individual.y)) & coef.x < 0 ~ "reduced",
@@ -715,7 +585,7 @@ in_text_vals <- function() {
                                                  qval_individual.x > qval_individual.y & coef.y < 0 ~ "reduced",
                                                  qval_individual.x > qval_individual.y & coef.y > 0 ~ "increased")) %>%
         mutate(qval_individual = pmin(qval_individual.x, qval_individual.y, na.rm = T)) %>%
-        select(-qval_individual.x, -qval_individual.y)
+        dplyr::select(-qval_individual.x, -qval_individual.y)
     
     all_results_atleast16 <- full_join(all_results_atleast16[all_results_atleast16$association == 'abundance',], 
                                        all_results_atleast16[all_results_atleast16$association == 'prevalence',], by = c("feature", "metadata", "value"))
@@ -723,7 +593,7 @@ in_text_vals <- function() {
     all_results_atleast16 <- all_results_atleast16 %>%
         filter(!is.na(metadata) & metadata %in% c('dysbiosis_state', 'diagnosis')) %>%
         filter((qval_individual.x < 0.1 & abs(coef.x) > 1) | (qval_individual.y < 0.1 & abs(coef.y) > 1)) %>%
-        mutate(feature = gsub('.*\\.s__', '', feature)) %>%
+        mutate(feature = gsub('.*\\|s__', '', feature)) %>%
         filter(!is.na(feature)) %>%
         mutate(association_direction = case_when(qval_individual.x < 0.1 & (qval_individual.y > 0.1 | is.na(qval_individual.y)) & coef.x > 0 ~ "increased",
                                                  qval_individual.x < 0.1 & (qval_individual.y > 0.1 | is.na(qval_individual.y)) & coef.x < 0 ~ "reduced",
@@ -734,13 +604,13 @@ in_text_vals <- function() {
                                                  qval_individual.x > qval_individual.y & coef.y < 0 ~ "reduced",
                                                  qval_individual.x > qval_individual.y & coef.y > 0 ~ "increased")) %>%
         mutate(qval_individual = pmin(qval_individual.x, qval_individual.y, na.rm = T)) %>%
-        select(-qval_individual.x, -qval_individual.y)
+        dplyr::select(-qval_individual.x, -qval_individual.y)
     
     joined_results <- full_join(all_results_under16, all_results_atleast16, by = c("feature", "metadata", "value"))
     joined_results <- joined_results %>%
         filter(!is.na(metadata) & metadata %in% c('dysbiosis_state', 'diagnosis')) %>%
         filter((qval_individual.x < 0.1 | qval_individual.y)) %>%
-        mutate(feature = gsub('.*\\.s__', '', feature)) %>%
+        mutate(feature = gsub('.*\\|s__', '', feature)) %>%
         filter(!is.na(feature))
     
     table(!is.na(joined_results$qval_individual.x) & joined_results$qval_individual.x < 0.1 & joined_results$association_direction.x == 'increased', 
@@ -759,14 +629,14 @@ in_text_vals <- function() {
     
     table(joined_results$qval_individual.x < 0.1 & joined_results$coef.x < 0, joined_results$qval_individual.y < 0.1 & joined_results$coef.y < 0)
     joined_results %>% filter(qval_individual.x < 0.1 & coef.x < 0 & qval_individual.y < 0.1 & coef.y < 0) %>%
-        filter(grepl('Phocaeicola_vulgatus', feature))
+        filter(grepl('Phocaeicola vulgatus', feature))
     
     # MPA4 results
     all_results <- read.csv('HMP2/analysis/results/v4_ibd_associations_Maaslin3CompAdjust.tsv', sep='\t')
     all_results <- all_results %>%
         filter(!is.na(metadata) & metadata %in% c('dysbiosis_state', 'diagnosis')) %>%
         filter((qval_individual < 0.1 & abs(coef) > 1)) %>%
-        mutate(feature = gsub('.*\\.s__', '', feature)) %>%
+        mutate(feature = gsub('.*\\|s__', '', feature)) %>%
         filter(!is.na(feature))
     
     table(all_results$association, all_results$coef > 0)
@@ -873,8 +743,7 @@ recreate_summary_plot_mtx <- function() {
                                  value == 'consent_age' ~ 'Age',
                                  value == 'reads_filtered' ~ 'Read depth',
                                  TRUE ~ value),
-               feature = gsub('\\.|\\.', ' ', feature) %>%
-                   gsub(pattern = '   ', replacement = ' ', feature) %>%
+               feature = gsub(pattern = '   ', replacement = ' ', feature) %>%
                    gsub(pattern = '  ', replacement = ' ', feature) %>%
                    gsub(pattern = '_', replacement = ' ') %>% 
                    gsub(pattern = 'sp ', replacement = 'sp. ') %>%
@@ -897,8 +766,7 @@ recreate_summary_plot_mtx <- function() {
                                  value == 'consent_age' ~ 'Age',
                                  value == 'reads_filtered' ~ 'Read depth',
                                  TRUE ~ value),
-               feature = gsub('\\.|\\.', ' ', feature) %>%
-                   gsub(pattern = '   ', replacement = ' ', feature) %>%
+               feature = gsub(pattern = '   ', replacement = ' ', feature) %>%
                    gsub(pattern = '  ', replacement = ' ', feature) %>%
                    gsub(pattern = '_', replacement = ' ') %>% 
                    gsub(pattern = 'sp ', replacement = 'sp. ') %>%
@@ -981,12 +849,12 @@ recreate_summary_plot_v4 <- function() {
                                  value == 'consent_age' ~ 'Age',
                                  value == 'reads_filtered' ~ 'Read depth',
                                  TRUE ~ value),
-               feature = gsub('.*\\.s', '', feature) %>%
+               feature = gsub('.*\\|s', '', feature) %>%
                    gsub(pattern = 's__', replacement = '') %>% 
                    gsub(pattern = '_', replacement = ' ') %>% 
                    gsub(pattern = 'sp ', replacement = 'sp. ') %>%
                    gsub(pattern = ' group$', replacement = '') %>%
-                   gsub(pattern = '\\.t  ', replacement = ' (') %>%
+                   gsub(pattern = '\\|t  ', replacement = ' (') %>%
                    paste0(')') %>%
                    trimws())
     
@@ -1007,12 +875,12 @@ recreate_summary_plot_v4 <- function() {
                                  value == 'consent_age' ~ 'Age',
                                  value == 'reads_filtered' ~ 'Read depth',
                                  TRUE ~ value),
-               feature = gsub('.*\\.s', '', feature) %>%
+               feature = gsub('.*\\|s', '', feature) %>%
                    gsub(pattern = 's__', replacement = '') %>% 
                    gsub(pattern = '_', replacement = ' ') %>% 
                    gsub(pattern = 'sp ', replacement = 'sp. ') %>%
                    gsub(pattern = ' group$', replacement = '') %>%
-                   gsub(pattern = '\\.t  ', replacement = ' (') %>%
+                   gsub(pattern = '\\|t  ', replacement = ' (') %>%
                    paste0(')') %>%
                    trimws())
     
@@ -1097,12 +965,12 @@ recreate_summary_plot_v4 <- function() {
                                  value == 'consent_age' ~ 'Age',
                                  value == 'reads_filtered' ~ 'Read depth',
                                  TRUE ~ value),
-               feature = gsub('.*\\.s', '', feature) %>%
+               feature = gsub('.*\\|s', '', feature) %>%
                    gsub(pattern = 's__', replacement = '') %>% 
                    gsub(pattern = '_', replacement = ' ') %>% 
                    gsub(pattern = 'sp ', replacement = 'sp. ') %>%
                    gsub(pattern = ' group$', replacement = '') %>%
-                   gsub(pattern = '\\.t  ', replacement = ' (') %>%
+                   gsub(pattern = '\\|t  ', replacement = ' (') %>%
                    paste0(')') %>%
                    trimws())
     
@@ -1152,12 +1020,12 @@ recreate_summary_plot_v4_under16 <- function() {
                                  value == 'consent_age' ~ 'Age',
                                  value == 'reads_filtered' ~ 'Read depth',
                                  TRUE ~ value),
-               feature = gsub('.*\\.s', '', feature) %>%
+               feature = gsub('.*\\|s', '', feature) %>%
                    gsub(pattern = 's__', replacement = '') %>% 
                    gsub(pattern = '_', replacement = ' ') %>% 
                    gsub(pattern = 'sp ', replacement = 'sp. ') %>%
                    gsub(pattern = ' group$', replacement = '') %>%
-                   gsub(pattern = '\\.t  ', replacement = ' (') %>%
+                   gsub(pattern = '\\|t  ', replacement = ' (') %>%
                    paste0(')') %>%
                    trimws()) %>%
         mutate(feature = ifelse(grepl('GGB', feature), gsub(' \\(.*', '', feature), feature))
@@ -1179,12 +1047,12 @@ recreate_summary_plot_v4_under16 <- function() {
                                  value == 'consent_age' ~ 'Age',
                                  value == 'reads_filtered' ~ 'Read depth',
                                  TRUE ~ value),
-               feature = gsub('.*\\.s', '', feature) %>%
+               feature = gsub('.*\\|s', '', feature) %>%
                    gsub(pattern = 's__', replacement = '') %>% 
                    gsub(pattern = '_', replacement = ' ') %>% 
                    gsub(pattern = 'sp ', replacement = 'sp. ') %>%
                    gsub(pattern = ' group$', replacement = '') %>%
-                   gsub(pattern = '\\.t  ', replacement = ' (') %>%
+                   gsub(pattern = '\\|t  ', replacement = ' (') %>%
                    paste0(')') %>%
                    trimws()) %>%
         mutate(feature = ifelse(grepl('GGB', feature), gsub(' \\(.*', '', feature), feature))
@@ -1630,6 +1498,11 @@ recreate_summary_plot_v4_under16 <- function() {
                         height = height_out,
                         width = width_out)
     }
+    
+    ggplot2::ggsave(file.path(figures_folder, "summary_plot_tall.png"),
+                    plot = final_plot,
+                    height = height_out + 10,
+                    width = width_out)
 }
 recreate_summary_plot_v4_under16()
 
@@ -1650,12 +1523,12 @@ recreate_summary_plot_v4_atleast16 <- function() {
                                  value == 'consent_age' ~ 'Age',
                                  value == 'reads_filtered' ~ 'Read depth',
                                  TRUE ~ value),
-               feature = gsub('.*\\.s', '', feature) %>%
+               feature = gsub('.*\\|s', '', feature) %>%
                    gsub(pattern = 's__', replacement = '') %>% 
                    gsub(pattern = '_', replacement = ' ') %>% 
                    gsub(pattern = 'sp ', replacement = 'sp. ') %>%
                    gsub(pattern = ' group$', replacement = '') %>%
-                   gsub(pattern = '\\.t  ', replacement = ' (') %>%
+                   gsub(pattern = '\\|t  ', replacement = ' (') %>%
                    paste0(')') %>%
                    trimws()) %>%
         mutate(feature = ifelse(grepl('GGB', feature), gsub(' \\(.*', '', feature), feature))
@@ -1677,12 +1550,12 @@ recreate_summary_plot_v4_atleast16 <- function() {
                                  value == 'consent_age' ~ 'Age',
                                  value == 'reads_filtered' ~ 'Read depth',
                                  TRUE ~ value),
-               feature = gsub('.*\\.s', '', feature) %>%
+               feature = gsub('.*\\|s', '', feature) %>%
                    gsub(pattern = 's__', replacement = '') %>% 
                    gsub(pattern = '_', replacement = ' ') %>% 
                    gsub(pattern = 'sp ', replacement = 'sp. ') %>%
                    gsub(pattern = ' group$', replacement = '') %>%
-                   gsub(pattern = '\\.t  ', replacement = ' (') %>%
+                   gsub(pattern = '\\|t  ', replacement = ' (') %>%
                    paste0(')') %>%
                    trimws()) %>%
         mutate(feature = ifelse(grepl('GGB', feature), gsub(' \\(.*', '', feature), feature))

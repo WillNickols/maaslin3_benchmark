@@ -13,7 +13,7 @@ args = workflow.parse_args()
 this_directory = str(os.path.dirname(os.path.realpath(__file__))).rstrip('/') + '/'
 
 # output, set this to the GitHub repository
-output = os.path.abspath(args.output.rstrip("general_evaluations/")) + "/"
+output = os.path.abspath(args.output.removesuffix("general_evaluations/")) + "/"
 if not os.path.isdir(output):
 	os.makedirs(output)
 
@@ -123,7 +123,7 @@ run_tools_directory = this_directory + 'run_tools/'
 working_directory = output
 
 def compute_running_outputs(generator, tool, param):
-    tool = tool.rstrip('.R').lstrip('run_')
+    tool = tool.removesuffix('.R').removeprefix('run_')
     if args.tmp:
         nIterations = 5
     else:

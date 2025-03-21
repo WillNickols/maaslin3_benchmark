@@ -40,11 +40,13 @@ for key, values in param_dict.items():
 param_list_final = []
 for param_dict in param_list_generation:
     for metadata_type in metadata_types:
-        new_param_dict = copy.deepcopy(param_dict)  # Create a deep copy
+        new_param_dict = copy.deepcopy(param_dict) # Create a deep copy
         new_param_dict['metadataType'] = metadata_type
         if metadata_type == 'binary':
             new_param_dict['nMetadata'] = str(1)
             new_param_dict['nPerSubject'] = str(1)
+        if new_param_dict['depthConfound'] == 'TRUE':
+            new_param_dict['nMetadata'] = str(1)
         param_list_final.append(new_param_dict)
 
 param_list_final = set([frozenset(param_single_final.items()) for param_single_final in param_list_final])
@@ -69,6 +71,9 @@ for param in param_list_final:
     ' --effectSize ' + param['effectSize'] + \
     ' --effectPos ' + param['effectPos'] + \
     ' --readDepth ' + param['readDepth'] + \
+    ' --depthConfound ' + param['depthConfound'] + \
+    ' --propAbun ' + param['propAbun'] + \
+    ' --zeroInflate ' + param['zeroInflate'] + \
     ' --nCores 1' + \
     ' --workingDirectory ' + working_directory
     if args.tmp:

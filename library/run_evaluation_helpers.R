@@ -46,49 +46,68 @@ prepare_truth_groups <- function(truth, generator) {
 allowed_errors <- c(NA)
 
 prepare_associations_general <- function(associations, tool, generator = 'SD2', threshold = -1) {
-  if (tool %in% c('ALDEx2', 'ANCOMBC')) {
-    if (tool == 'ANCOMBC') {
-      associations <- associations[is.na(associations$error),]
-      if (generator != 'ANCOM_BC_generator') {
-          associations <- associations[associations$associations != 'prevalence',]
-      }
-      associations$effect_size <- associations$effect_size / log(2) # Inflate because transformation is originally base e
+    if (tool %in% c('ALDEx2', 'ALDEx2_scale', 'ANCOMBC', 'edgeR')) {
+        if (tool == 'ANCOMBC') {
+            associations <- associations[is.na(associations$error),]
+            if (generator != 'ANCOM_BC_generator') {
+                associations <- associations[associations$associations != 'prevalence',]
+            }
+            associations$effect_size <- associations$effect_size / log(2) # Inflate because transformation is originally base e
+        }
+        if (generator == 'SimSeq' | generator == 'ANCOM_BC_generator') {
+            outputs <- data.frame(taxon = associations$taxon,
+                                  metadata = gsub('[0-9]$', '', associations$metadata),
+                                  effect_size = associations$effect_size,
+                                  signif = associations$qval)
+        } else {
+            outputs <- data.frame(taxon = associations$taxon,
+                                  metadata = gsub("([0-9])[0-9]$", "\\1", associations$metadata),
+                                  effect_size = associations$effect_size,
+                                  signif = associations$qval)
+        }
+        if (nrow(outputs) == 0) {
+            outputs <- data.frame(matrix(nrow = 0, ncol = 4))
+            colnames(outputs) <- c("taxon", "metadata", "effect_size", "signif")
+        }
+        return(outputs[rowSums(is.na(outputs)) == 0 & outputs$metadata != 'read_depth' & 
+                           abs(outputs$effect_size) > threshold,])
     }
-    if (generator == 'SimSeq' | generator == 'ANCOM_BC_generator') {
-      outputs <- data.frame(taxon = associations$taxon,
-                            metadata = gsub('[0-9]$', '', associations$metadata),
-                            effect_size = associations$effect_size,
-                            signif = associations$qval)
-    } else {
-      outputs <- data.frame(taxon = associations$taxon,
-                            metadata = gsub("([0-9])[0-9]$", "\\1", associations$metadata),
-                            effect_size = associations$effect_size,
-                            signif = associations$qval)
+    if (tool %in% c('Maaslin2')) {
+        outputs <- data.frame(taxon = associations$taxon,
+                              metadata = associations$metadata,
+                              effect_size = associations$effect_size,
+                              signif = associations$qval)
+        return(outputs[rowSums(is.na(outputs)) == 0 & outputs$metadata != 'read_depth' & 
+                           abs(outputs$effect_size) > threshold,])
     }
-    if (nrow(outputs) == 0) {
-      outputs <- data.frame(matrix(nrow = 0, ncol = 4))
-      colnames(outputs) <- c("taxon", "metadata", "effect_size", "signif")
+    if (grepl('Maaslin3', tool)) {
+        associations <- associations[associations$error %in% allowed_errors,]
+        outputs <- data.frame(taxon = associations$taxon,
+                              metadata = associations$metadata,
+                              effect_size = associations$effect_size,
+                              signif = associations$qval_joint)
+        return(outputs[rowSums(is.na(outputs)) == 0 & outputs$metadata != 'read_depth' & 
+                           abs(outputs$effect_size) > threshold,])
     }
-    return(outputs[rowSums(is.na(outputs)) == 0 & outputs$metadata != 'read_depth' & 
-                     abs(outputs$effect_size) > threshold,])
-  }
-  if (tool %in% c('Maaslin2')) {
-    outputs <- data.frame(taxon = associations$taxon,
-                          metadata = associations$metadata,
-                          effect_size = associations$effect_size,
-                          signif = associations$qval)
-    return(outputs[rowSums(is.na(outputs)) == 0 & outputs$metadata != 'read_depth' & 
-                     abs(outputs$effect_size) > threshold,])
-  }
-  if (grepl('Maaslin3', tool)) {
-    associations <- associations[associations$error %in% allowed_errors,]
-    outputs <- data.frame(taxon = associations$taxon,
-                          metadata = associations$metadata,
-                          effect_size = associations$effect_size,
-                          signif = associations$qval_joint)
-    return(outputs[rowSums(is.na(outputs)) == 0 & outputs$metadata != 'read_depth' & 
-                     abs(outputs$effect_size) > threshold,])
-  }
+    if (tool == 'DESeq2') {
+        if (generator == 'SimSeq' | generator == 'ANCOM_BC_generator') {
+            outputs <- data.frame(taxon = associations$taxon,
+                                  metadata = sub("_.*", "", associations$metadata),
+                                  effect_size = associations$effect_size,
+                                  signif = associations$qval)
+        } else {
+            outputs <- data.frame(taxon = associations$taxon,
+                                  metadata = sub("^(.*?_[0-9]+).*", "\\1", associations$metadata),
+                                  effect_size = associations$effect_size,
+                                  signif = associations$qval)
+        }
+        if (nrow(outputs) == 0) {
+            outputs <- data.frame(matrix(nrow = 0, ncol = 4))
+            colnames(outputs) <- c("taxon", "metadata", "effect_size", "signif")
+        }
+        return(outputs[rowSums(is.na(outputs)) == 0 & outputs$metadata != 'read_depth' & 
+                           abs(outputs$effect_size) > threshold,])
+    }
 }
 
 prepare_associations_abundance <- function(associations, tool, generator = 'SD2', threshold = -1) {
@@ -159,6 +178,47 @@ unweighted_precision_recall <- function(truth, associations, abundance, metadata
   
   return(c(precision, recall))
 }
+
+effect_size_fp <- function(truth, associations, abundance, metadata, threshold = 0.1) {
+    if (nrow(associations) == 0) {
+        return(c(NA, NA))
+    }
+    # all_possible_pairs <- apply(expand.grid(rownames(abundance), colnames(metadata)),
+    #                             1, paste0, collapse = '_')
+    truth_match_vec <- unique(paste0(truth$taxon, '_', truth$metadata))
+    associations_match_vec <- paste0(associations$taxon, '_', associations$metadata)
+    associations_match_vec <- unique(associations_match_vec[associations$signif < threshold])
+    
+    effect_size_fp <- mean(abs(associations$effect_size[(!paste0(associations$taxon, '_', associations$metadata) %in% truth_match_vec) & 
+                                                       associations$signif < threshold]))
+    
+    if (length(effect_size_fp) == 0) {
+        effect_size_fp <- NA
+    }
+    
+    return(effect_size_fp)
+}
+
+effect_size_tp <- function(truth, associations, abundance, metadata, threshold = 0.1) {
+    if (nrow(associations) == 0) {
+        return(c(NA, NA))
+    }
+    # all_possible_pairs <- apply(expand.grid(rownames(abundance), colnames(metadata)),
+    #                             1, paste0, collapse = '_')
+    truth_match_vec <- unique(paste0(truth$taxon, '_', truth$metadata))
+    associations_match_vec <- paste0(associations$taxon, '_', associations$metadata)
+    associations_match_vec <- unique(associations_match_vec[associations$signif < threshold])
+    
+    effect_size_tp <- mean(abs(associations$effect_size[(paste0(associations$taxon, '_', associations$metadata) %in% truth_match_vec) & 
+                                                            associations$signif < threshold]))
+    
+    if (length(effect_size_tp) == 0) {
+        effect_size_tp <- NA
+    }
+    
+    return(effect_size_tp)
+}
+
 
 TSSnorm = function(features) {
   # Convert to Matrix from Data Frame
@@ -346,6 +406,46 @@ unweighted_precision_recall_maaslin3 <- function(truth, associations, abundance,
   return(c(precision, recall))
 }
 
+effect_size_fp_maaslin3 <- function(truth, associations, abundance, metadata, threshold = 0.1) {
+    if (nrow(associations) == 0) {
+        return(c(NA, NA))
+    }
+    # all_possible_pairs <- apply(expand.grid(rownames(abundance), colnames(metadata)),
+    #                             1, paste0, collapse = '_')
+    truth_match_vec <- unique(paste0(truth$taxon, '_', truth$metadata, '_', truth$associations))
+    associations_match_vec <- paste0(associations$taxon, '_', associations$metadata, '_', associations$association)
+
+    effect_size_fp <- mean(abs(associations$effect_size[(!associations_match_vec %in% truth_match_vec) & 
+                                                       associations$signif < threshold]))
+    
+    if (length(effect_size_fp) == 0) {
+        effect_size_fp <- NA
+    }
+    
+    
+    return(effect_size_fp)
+}
+
+effect_size_tp_maaslin3 <- function(truth, associations, abundance, metadata, threshold = 0.1) {
+    if (nrow(associations) == 0) {
+        return(c(NA, NA))
+    }
+    # all_possible_pairs <- apply(expand.grid(rownames(abundance), colnames(metadata)),
+    #                             1, paste0, collapse = '_')
+    truth_match_vec <- unique(paste0(truth$taxon, '_', truth$metadata, '_', truth$associations))
+    associations_match_vec <- paste0(associations$taxon, '_', associations$metadata, '_', associations$association)
+    
+    effect_size_tp <- mean(abs(associations$effect_size[(associations_match_vec %in% truth_match_vec) & 
+                                                            associations$signif < threshold]))
+    
+    if (length(effect_size_tp) == 0) {
+        effect_size_tp <- NA
+    }
+    
+    
+    return(effect_size_tp)
+}
+
 weighted_precision_recall_maaslin3 <- function(truth, associations, abundance, metadata, threshold = 0.1, abundance_threshold = 0.001, prevalence_threshold = 0.1) {
   if (nrow(associations) == 0) {
     return(c(NA, NA))
@@ -471,7 +571,7 @@ effect_size_correlation_maaslin3 <- function(truth, associations, threshold = 0.
 }
 
 issue_prop <- function(associations, tool) {
-  if (tool %in% c('ALDEx2', 'ANCOMBC')) {
+  if (tool %in% c('ALDEx2', 'ALDEx2_scale', 'ANCOMBC', 'DESeq2', 'edgeR')) {
     outputs <- data.frame(taxon = associations$taxon,
                           metadata = associations$metadata,
                           effect_size = associations$effect_size,

@@ -8,7 +8,7 @@ The necessary packages for running the benchmarking can be installed from the `e
 install.packages(c('dplyr', 'pbapply', 'lmerTest', 'parallel', 'lme4', 'plyr', 'optparse', 'logging', 'data.table', 'ggplot2', 'grid', 'pheatmap'))
 install.packages(c("pkgmaker", "stringi", "doParallel", "SimSeq", "tidyr", "devtools", "TcGSA", "MCMCprecision")) # Come back to install devtools if necessary
 install.packages("BiocManager")
-BiocManager::install(c("phyloseq", "microbiome", "SparseDOSSA2", "ALDEx2", "ANCOMBC", "TreeSummarizedExperiment", "Maaslin2"))
+BiocManager::install(c("phyloseq", "microbiome", "SparseDOSSA2", "ALDEx2", "ANCOMBC", "TreeSummarizedExperiment", "Maaslin2", "DESeq2", "edgeR"))
 library("devtools")
 install_github("biobakery/MaAsLin3")
 ```
@@ -40,7 +40,7 @@ python deep_sequencing/evaluate_deep_sequencing.py \
   -o deep_sequencing/
 ```
 
-The following command runs the general evaluation with all generators.
+The following command runs the ANCOM-BC evaluation.
 ```
 python general_evaluations/evaluate_general.py \
   --parameters general_evaluations/evaluate_general.txt \

@@ -168,11 +168,7 @@ if (!outputs_already_exist){
     }
     
     sink('/dev/null')
-    if(generator == 'SD2') {
-        fixed_effects <- colnames(metadata)[!colnames(metadata) %in% c("ID", "read_depth")]
-    } else {
-        fixed_effects <- colnames(metadata)[!colnames(metadata) %in% c("ID", "read_depth")]
-    }
+    fixed_effects <- colnames(metadata)[!colnames(metadata) %in% c("ID", "read_depth")]
     
     if ('ID' %in% colnames(metadata) & length(unique(metadata$ID)) != length(metadata$ID)) {
       fix_formula <- paste0(fixed_effects, collapse = " + ")

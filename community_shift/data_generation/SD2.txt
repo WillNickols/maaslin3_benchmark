@@ -7,3 +7,6 @@ effectPos: 0.9
 nMetadata: 5
 nPerSubject: 1
 readDepth: 50000
+depthConfound: FALSE
+propAbun: 0.5
+zeroInflate: TRUE

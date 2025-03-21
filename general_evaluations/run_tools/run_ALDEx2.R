@@ -164,11 +164,7 @@ if (!outputs_already_exist){
       ID <- rownames(metadata)
     }
     
-    if(generator == 'SD2') {
-        fixed_effects <- colnames(metadata)[!colnames(metadata) %in% c("ID", "read_depth")]
-    } else {
-        fixed_effects <- colnames(metadata)[!colnames(metadata) %in% c("ID", "read_depth")]
-    }
+    fixed_effects <- colnames(metadata)[!colnames(metadata) %in% c("ID", "read_depth")]
     
     sink('/dev/null')
     if ('ID' %in% colnames(metadata) & length(unique(metadata$ID)) != length(metadata$ID)) {
@@ -183,15 +179,18 @@ if (!outputs_already_exist){
                                         collapse = "")),metadata)
     }
     
-    aldex_clr_out <- aldex.clr(abundance, mm, denom="all")
-    glm.test <- aldex.glm(aldex_clr_out)
-    
+    aldex_clr_out <- aldex.clr(abundance, mm[,2], denom="all", gamma = 0.5)
+    x.tt <- aldex.ttest(aldex_clr_out)
+    x.effect <- aldex.effect(aldex_clr_out, CI=F)
+    glm.test <- data.frame(pval = x.tt$we.ep, Est = x.effect$effect)
+    colnames(glm.test) <- paste0(colnames(mm)[2], ':', c('pval', 'Est'))
+    rownames(glm.test) <- rownames(x.tt)
     glm.test <- glm.test[,grepl("Est$|pval$", colnames(glm.test))]
     
     if ('ID' %in% colnames(metadata)) {
-      glm.test <- glm.test[,!grepl(paste0(c("Intercept", unique(metadata$ID)), collapse = "|"), colnames(glm.test))]
+        glm.test <- glm.test[,!grepl(paste0(c("Intercept", unique(metadata$ID)), collapse = "|"), colnames(glm.test))]
     } else {
-      glm.test <- glm.test[,!grepl("Intercept", colnames(glm.test))]
+        glm.test <- glm.test[,!grepl("Intercept", colnames(glm.test))]
     }
     glm.test$Feature <- rownames(glm.test)
     glm.test <- reshape2::melt(glm.test, id.vars = c("Feature"))
