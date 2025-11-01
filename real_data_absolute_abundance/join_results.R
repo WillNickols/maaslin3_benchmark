@@ -176,7 +176,7 @@ for (study in unique(growing_df$study)) {
 }
 
 plot_out <- grid.arrange(plot_list[[2]], plot_list[[1]], plot_list[[3]], ncol = 3)
-ggsave(paste0(figures_folder, 'abs_vs_rel_real_data.png'),
+ggsave(paste0(figures_folder, 'abs_vs_rel_real_data.svg'),
        plot = plot_out, width = 12, height = 5)
 
 growing_df_2 <- data.frame()
@@ -255,7 +255,7 @@ plot_out_2 <- ggplot(growing_df_2, aes(x = tool, y = value, fill = meta_in_study
         axis.text.x = element_text(angle = 45, vjust = 1, hjust=1),
         strip.background = element_rect(fill = "gray95"),
         panel.grid.minor = element_blank())
-ggsave(paste0(figures_folder, 'abs_vs_real_all_tools.png'),
+ggsave(paste0(figures_folder, 'abs_vs_real_all_tools.svg'),
        plot = plot_out_2, width = 10, height = 3.5)
 
 # In-text numbers

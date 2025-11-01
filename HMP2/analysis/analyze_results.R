@@ -531,7 +531,7 @@ dysosmobacter_welbionis_plot <- function() {
         coord_flip()
     
     plot_out <- gridExtra::grid.arrange(plot2, plot1, ncol = 2, widths = c(1.5, 1))
-    ggsave(plot = plot_out, filename = paste0(figures_folder, 'Dysosmobacter_welbionis.png'), width = 6, height = 3)
+    ggsave(plot = plot_out, filename = paste0(figures_folder, 'Dysosmobacter_welbionis.svg'), width = 6, height = 3)
 }
 dysosmobacter_welbionis_plot()
 
@@ -1468,7 +1468,7 @@ recreate_summary_plot_v4_under16 <- function() {
         final_plot <- NULL
     }
     
-    summary_plot_file <- 'HMP2/analysis/fit_out_Maaslin3_under16_4/figures/summary_plot.pdf'
+    summary_plot_file <- 'HMP2/analysis/fit_out_Maaslin3_under16_4/figures/summary_plot.svg'
     figures_folder <- 'HMP2/analysis/fit_out_Maaslin3_under16_4/figures'
     
     # Save plot
@@ -1492,14 +1492,14 @@ recreate_summary_plot_v4_under16 <- function() {
             width = width_out
         )
         png_file <-
-            file.path(figures_folder, "summary_plot.png")
+            file.path(figures_folder, "summary_plot.svg")
         ggplot2::ggsave(png_file,
                         plot = final_plot,
                         height = height_out,
                         width = width_out)
     }
     
-    ggplot2::ggsave(file.path(figures_folder, "summary_plot_tall.png"),
+    ggplot2::ggsave(file.path(figures_folder, "summary_plot_tall.svg"),
                     plot = final_plot,
                     height = height_out + 10,
                     width = width_out)
@@ -1969,7 +1969,7 @@ recreate_summary_plot_v4_atleast16 <- function() {
         final_plot <- NULL
     }
     
-    summary_plot_file <- 'HMP2/analysis/fit_out_Maaslin3_atleast16_4/figures/summary_plot.pdf'
+    summary_plot_file <- 'HMP2/analysis/fit_out_Maaslin3_atleast16_4/figures/summary_plot.svg'
     figures_folder <- 'HMP2/analysis/fit_out_Maaslin3_atleast16_4/figures'
     
     # Save plot
@@ -1993,7 +1993,7 @@ recreate_summary_plot_v4_atleast16 <- function() {
             width = width_out
         )
         png_file <-
-            file.path(figures_folder, "summary_plot.png")
+            file.path(figures_folder, "summary_plot.svg")
         ggplot2::ggsave(png_file,
                         plot = final_plot,
                         height = height_out,
@@ -2001,9 +2001,3 @@ recreate_summary_plot_v4_atleast16 <- function() {
     }
 }
 recreate_summary_plot_v4_atleast16()
-
-
-
-
-
-

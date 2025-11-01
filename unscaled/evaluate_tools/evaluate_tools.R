@@ -183,7 +183,7 @@ SD2_sample_size_figure <- function() {
                         breaks=c("ALDEx2", 'ALDEx2\n(scale informed)', "ANCOM-BC2", 'DESeq2', 
                                  'edgeR', "MaAsLin 2", "MaAsLin 3", "MaAsLin 3\n(Spike-in)")) +       
       geom_point(aes(x = get(param_name), y = 0), alpha = 0)
-  ggsave(paste0(figures_folder, 'SD2_sample_size_figure.png'),
+  ggsave(paste0(figures_folder, 'SD2_sample_size_figure.svg'),
          plot = plot_out, width = 12, height = 4.5)
 }
 SD2_sample_size_figure()
@@ -365,6 +365,11 @@ SD2_sample_size_sup_figure <- function() {
     
     melted_df %>%
         dplyr::filter(variable == 'Precision', tool %in% c("ALDEx2", "MaAsLin 3")) %>%
+        dplyr::group_by(tool, nSubjects) %>%
+        dplyr::summarize(mean(value, na.rm=T))
+    
+    melted_df %>%
+        dplyr::filter(variable == 'Recall', tool %in% c("ALDEx2", "MaAsLin 3")) %>%
         dplyr::group_by(tool, nSubjects) %>%
         dplyr::summarize(mean(value, na.rm=T))
     
@@ -2275,7 +2280,7 @@ SD2_improvement_pr_figure_maaslin3 <- function() {
         scale_color_manual(values=c("#EE7600", "#68228B", "#8B1A1A"),
                            breaks=tool_vec)
     
-    ggsave(paste0(figures_folder, 'SD2_improvement_abundance_pr_figure_maaslin3.png'),
+    ggsave(paste0(figures_folder, 'SD2_improvement_abundance_pr_figure_maaslin3.svg'),
            plot = plot_out, width = 9, height = 5)
     
     melted_df <- maaslin3_results_df %>%
@@ -2331,7 +2336,7 @@ SD2_improvement_pr_figure_maaslin3 <- function() {
         scale_color_manual(values=c("#D53E4F", "#26867d", "#68228B"),
                            breaks=c('MaAsLin 3 (No augmentation)', 'MaAsLin 3 (No prevalence screen)', 'MaAsLin 3'))
     
-    ggsave(paste0(figures_folder, 'SD2_improvement_prevalence_pr_figure_maaslin3.png'),
+    ggsave(paste0(figures_folder, 'SD2_improvement_prevalence_pr_figure_maaslin3.svg'),
            plot = plot_out, width = 9, height = 5)
 }
 SD2_improvement_pr_figure_maaslin3()

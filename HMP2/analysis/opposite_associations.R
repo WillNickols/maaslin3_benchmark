@@ -63,6 +63,7 @@ plot1 <- ggplot(joined_df, aes(x = age, y = abun)) +
     theme(title = element_text(size = 10))
 
 summary(lm(log(abun) ~ age, joined_df))
+confint(lm(log(abun) ~ age, joined_df))
 
 # Plot 2: non-zero abundance
 joined_df <- full_join(abun_df, metadata, by = c('sample' = 'External ID'))
@@ -81,6 +82,7 @@ plot2 <- ggplot(joined_df, aes(x = age, y = abun)) +
     theme(title = element_text(size = 10))
 
 summary(lm(log(abun) ~ age, joined_df))
+confint(lm(log(abun) ~ age, joined_df))
 
 # Plot 3: binary
 joined_df <- full_join(abun_df, metadata, by = c('sample' = 'External ID'))
@@ -110,7 +112,8 @@ plot3 <- ggplot(joined_df, aes(x = age, y = abun)) +
     theme(title = element_text(size = 10))
 
 summary(glm(abun ~ age, joined_df, family = binomial))
+confint(glm(abun ~ age, joined_df, family = binomial))
 
 combined_plot <- grid.arrange(plot1, plot2, plot3, ncol=3, widths = c(1,1,0.95))
-ggsave(combined_plot, filename = 'Figures/paper_figures/opposite_associations.png', width = 7, height = 2.2)
+ggsave(combined_plot, filename = 'Figures/paper_figures/opposite_associations.svg', width = 7, height = 2.2)
 

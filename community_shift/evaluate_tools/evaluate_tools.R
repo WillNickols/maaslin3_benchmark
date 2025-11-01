@@ -209,7 +209,7 @@ SD2_spike_microbe_figure <- function() {
       scale_fill_manual(values=c("#104E8B", "#5B9BD5", "#458B00", "darkgray", "lightgray", "#EEAD0E", "#68228B", "#8B1A1A"),
                         breaks=c("ALDEx2", 'ALDEx2\n(scale informed)', "ANCOM-BC2", 'DESeq2', 
                                  'edgeR', "MaAsLin 2", "MaAsLin 3", "MaAsLin 3\n(Spike-in)"))
-  ggsave(paste0(figures_folder, 'SD2_spike_microbe_figure.png'),
+  ggsave(paste0(figures_folder, 'SD2_spike_microbe_figure.svg'),
          plot = plot_out, width = 16, height = 4)
 }
 SD2_spike_microbe_figure()
